@@ -215,6 +215,39 @@
     width:66px; flex:none;
   }
   .bac-bp-row .bp-codes{ font-family:'Courier New',monospace; font-size:10.5px; letter-spacing:1px; color:var(--text); }
+
+  .bac-layer-nav{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .bac-layer-nav .bac-btn{ width:auto; flex:none; padding:10px 12px; font-size:11px; }
+  .bac-layer-indicator{
+    flex:1; text-align:center; font-family:'Courier New',monospace; font-weight:800;
+    font-size:14px; color:var(--amber);
+  }
+  .bac-layer-indicator .tag{ display:block; font-size:10px; color:var(--text-dim); font-weight:600; margin-top:2px; }
+  .bac-layer-grid-wrap{
+    background:var(--border); border:3px solid var(--border-light);
+    padding:8px; overflow-x:auto;
+  }
+  .bac-layer-grid{ display:inline-flex; gap:2px; }
+  .bac-layer-cell{
+    flex:none; width:66px; min-height:50px; padding:4px 2px 3px;
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    font-size:10px; font-weight:700; line-height:1.15; word-break:break-word;
+    border:1px solid rgba(0,0,0,.4); position:relative;
+  }
+  .bac-layer-cell .idx{
+    position:absolute; top:1px; left:3px; font-size:8px; font-weight:600; opacity:.6;
+    font-family:'Courier New',monospace;
+  }
+  details.bac-preview-details{
+    margin-top:14px; border:2px solid var(--border-light); background:var(--panel-2); padding:10px 12px;
+  }
+  details.bac-preview-details summary{
+    cursor:pointer; font-size:12.5px; color:var(--lime); font-weight:700; list-style:none;
+  }
+  details.bac-preview-details summary::-webkit-details-marker{ display:none; }
+  details.bac-preview-details summary::before{ content:'▸ '; }
+  details.bac-preview-details[open] summary::before{ content:'▾ '; }
+  details.bac-preview-details .bac-blueprint{ margin-top:10px; }
 </style>
 
 <div id="bac-root">
@@ -313,12 +346,26 @@
   </div>
 
   <div class="bac-panel">
-    <p class="bac-eyebrow">組み立て設計図（1段目〜最後の段）</p>
-    <p class="bac-footer-note" style="margin-top:0;">「1段目」＝土台となる一番下の段です。下から順に積んでいけば、最後の段でちょうど絵が完成します。各マスの記号は上の一覧表の「記号」欄に対応しています（左端が1マス目、右へ進みます）。</p>
-    <div class="bac-blueprint" id="bac-blueprint">
-      <div class="bac-empty">まだデータがありません</div>
+    <p class="bac-eyebrow">組み立てモード（実際の作業用）</p>
+    <p class="bac-footer-note" style="margin-top:0;">「1段目」＝土台となる一番下の段です。1段ずつ表示するので、置き終わったら「次の段へ」をタップして進めてください。各マスにブロック名を直接表示しているので、一覧表を見に行く必要はありません（左端が1マス目、右へ進みます）。</p>
+    <div class="bac-layer-nav">
+      <button class="bac-btn secondary" id="bac-layer-prev" disabled>← 前の段</button>
+      <div class="bac-layer-indicator" id="bac-layer-indicator">–</div>
+      <button class="bac-btn secondary" id="bac-layer-next" disabled>次の段 →</button>
+    </div>
+    <div class="bac-layer-grid-wrap">
+      <div class="bac-empty" id="bac-layer-empty">画像を選択すると、ここに1段ずつ組み立て用の配置が表示されます</div>
+      <div class="bac-layer-grid" id="bac-layer-grid" style="display:none;"></div>
     </div>
     <p class="bac-footer-note">※ ブロックの色は代表的な平均色をもとにした目安です。壁一面（縦×横1層）の平面アートとして必要な個数・配置を計算しています。</p>
+
+    <details class="bac-preview-details">
+      <summary>全段をまとめて見る（プレビュー・参考用）</summary>
+      <p class="bac-footer-note" style="margin-top:8px;">こちらは全体像を確認するための参考プレビューです。文字数が多く読みにくいため、実際の組み立ては上の「組み立てモード」をご利用ください。各マスの記号は下の「必要なブロック一覧」表の「記号」欄に対応しています。</p>
+      <div class="bac-blueprint" id="bac-blueprint">
+        <div class="bac-empty">まだデータがありません</div>
+      </div>
+    </details>
   </div>
 </div>
 
@@ -369,17 +416,33 @@
     ]
   };
 
-  var FULL_PALETTE = [];
-  Object.keys(PALETTE).forEach(function(cat){
-    PALETTE[cat].forEach(function(b){
-      FULL_PALETTE.push({name:b[0], hex:b[1], rgb:hexToRgb(b[1])});
-    });
-  });
-
   function hexToRgb(hex){
     var v = parseInt(hex.slice(1),16);
     return [(v>>16)&255,(v>>8)&255,v&255];
   }
+
+  // 一覧表を見に行かなくても分かるよう、設置マスに表示する短いブロック名を作る
+  function shortBlockName(name){
+    var m;
+    if((m = name.match(/^(.+)色の羊毛$/))) return m[1]+'羊毛';
+    if((m = name.match(/^(.+)色のテラコッタ$/))) return m[1]+'テラコッタ';
+    if((m = name.match(/^(.+)のコンクリート$/))) return m[1]+'コンクリ';
+    if((m = name.match(/^(.+)ブロック$/))) return m[1];
+    return name;
+  }
+
+  function textColorFor(hex){
+    var rgb = hexToRgb(hex);
+    var lum = (0.299*rgb[0]+0.587*rgb[1]+0.114*rgb[2])/255;
+    return lum > 0.6 ? '#1b1a17' : '#f5f0e0';
+  }
+
+  var FULL_PALETTE = [];
+  Object.keys(PALETTE).forEach(function(cat){
+    PALETTE[cat].forEach(function(b){
+      FULL_PALETTE.push({name:b[0], short:shortBlockName(b[0]), hex:b[1], rgb:hexToRgb(b[1])});
+    });
+  });
 
   function shadeColor(hex, percent){
     var rgb = hexToRgb(hex);
@@ -413,7 +476,7 @@
     $('bac-diff-msg').textContent = tier.msg;
   }
 
-  var state = { img:null, lockAspect:true, dither:true, showGrid:false };
+  var state = { img:null, lockAspect:true, dither:true, showGrid:false, currentLayer:1 };
   var $ = function(id){ return document.getElementById(id); };
 
   $('bac-palette-count').textContent = FULL_PALETTE.length;
@@ -532,6 +595,47 @@
     window.__bacCodeMap = codeMap;
     window.__bacResult = result;
     window.__bacW = w; window.__bacH = h;
+
+    state.currentLayer = 1;
+    renderLayerView();
+  }
+
+  function renderLayerView(){
+    var result = window.__bacResult, w = window.__bacW, h = window.__bacH;
+    var empty = $('bac-layer-empty'), grid = $('bac-layer-grid');
+    var prevBtn = $('bac-layer-prev'), nextBtn = $('bac-layer-next');
+    if(!result){
+      empty.style.display = 'block';
+      grid.style.display = 'none';
+      prevBtn.disabled = true; nextBtn.disabled = true;
+      $('bac-layer-indicator').textContent = '–';
+      return;
+    }
+    var dan = clamp(state.currentLayer, 1, h);
+    state.currentLayer = dan;
+    var y = h - dan;
+
+    empty.style.display = 'none';
+    grid.style.display = 'inline-flex';
+    grid.innerHTML = '';
+    for(var x=0;x<w;x++){
+      var block = result[y*w+x];
+      var cell = document.createElement('div');
+      cell.className = 'bac-layer-cell';
+      cell.style.background = block.hex;
+      cell.style.color = textColorFor(block.hex);
+      var idx = document.createElement('span');
+      idx.className = 'idx';
+      idx.textContent = (x+1);
+      cell.appendChild(idx);
+      cell.appendChild(document.createTextNode(block.short));
+      grid.appendChild(cell);
+    }
+
+    var tag = dan===1 ? '(土台)' : (dan===h ? '(最上段)' : '');
+    $('bac-layer-indicator').innerHTML = dan+' / '+h+' 段目<span class="tag">'+tag+'</span>';
+    prevBtn.disabled = dan<=1;
+    nextBtn.disabled = dan>=h;
   }
 
   function renderCanvas(result, w, h){
@@ -692,6 +796,15 @@
     process();
   });
 
+  $('bac-layer-prev').addEventListener('click', function(){
+    state.currentLayer -= 1;
+    renderLayerView();
+  });
+  $('bac-layer-next').addEventListener('click', function(){
+    state.currentLayer += 1;
+    renderLayerView();
+  });
+
   $('bac-dl-png').addEventListener('click', function(){
     var canvas = $('bac-canvas');
     var link = document.createElement('a');
@@ -717,21 +830,21 @@
   $('bac-dl-bp').addEventListener('click', function(){
     if(!window.__bacResult) return;
     var w = window.__bacW, h = window.__bacH;
-    var result = window.__bacResult, codeMap = window.__bacCodeMap;
+    var result = window.__bacResult;
     var lines = ['Pixel Forge 設計図（1段目〜'+h+'段目）', '横'+w+'ブロック × 縦'+h+'段', ''];
-    lines.push('--- 記号一覧 ---');
+    lines.push('--- 使用ブロック一覧 ---');
     var entries = Object.keys(window.__bacCounts).map(function(name){
-      return {name:name, count:window.__bacCounts[name], code:codeMap[name]};
+      return {name:name, count:window.__bacCounts[name]};
     }).sort(function(a,b){ return b.count-a.count; });
-    entries.forEach(function(e){ lines.push('['+e.code+'] ' + e.name + ' : ' + e.count + '個'); });
+    entries.forEach(function(e){ lines.push(e.name + ' : ' + e.count + '個'); });
     lines.push('');
-    lines.push('--- 段ごとの配置（土台から積む／左端が1マス目） ---');
+    lines.push('--- 段ごとの配置（土台から積む／左端が1マス目、各マスはブロック名） ---');
     for(var dan=1; dan<=h; dan++){
       var y = h - dan;
       var parts = [];
-      for(var x=0;x<w;x++){ parts.push(codeMap[result[y*w+x].name]); }
+      for(var x=0;x<w;x++){ parts.push(result[y*w+x].short); }
       var tag = dan+'段目' + (dan===1?'（土台・一番下）':(dan===h?'（最上段）':''));
-      lines.push(tag + ': ' + parts.join(' '));
+      lines.push(tag + ': ' + parts.join(' / '));
     }
     var blob = new Blob([lines.join('\n')], {type:'text/plain'});
     var link = document.createElement('a');
