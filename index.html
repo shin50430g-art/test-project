@@ -270,6 +270,12 @@
     padding:8px; overflow:auto; max-height:460px;
   }
   .sch-layer-grid{ display:grid; gap:2px; }
+
+  .bac-steps{
+    margin:0 0 14px; padding-left:20px; font-size:12px; color:var(--text-dim); line-height:1.7;
+  }
+  .bac-steps li{ margin-bottom:6px; }
+  .bac-steps b{ color:var(--lime); }
 </style>
 
 <div id="bac-root">
@@ -407,7 +413,24 @@
   </div>
 
   <div class="bac-panel">
-    <p class="bac-eyebrow">スキマティックファイルを選ぶ（.schem）</p>
+    <p class="bac-eyebrow">配布サイトから探す</p>
+    <ol class="bac-steps">
+      <li>下の「配布サイトを開く」をタップすると、<b>別タブ</b>でスキマティック配布サイトが開きます（このアプリの中に表示されるわけではありません）</li>
+      <li>サイトで欲しい建築物を見つけたら、<b>ダウンロードURL（.schemファイルへの直接リンク）</b>をコピーします</li>
+      <li>このアプリのタブに戻り、下の「URLを貼り付けて読み込む」欄にペーストして「読み込む」をタップします</li>
+      <li>うまく読み込めない場合は、サイト側がブラウザからの直接アクセスを許可していない可能性があります。その場合は、一度ファイルを端末にダウンロードしてから、さらに下の「ファイルを選択」で読み込んでください</li>
+    </ol>
+    <button class="bac-btn secondary" id="sch-open-site" type="button">配布サイトを開く（別タブ）</button>
+    <div class="bac-row" style="margin-top:14px;">
+      <div class="bac-label">URLを貼り付けて読み込む</div>
+      <input type="text" id="sch-url" placeholder="https://例.com/xxxxx.schem" class="bac-num-input" style="text-align:left;">
+      <button class="bac-btn" id="sch-load-url" style="margin-top:8px;" type="button">読み込む</button>
+    </div>
+    <p class="bac-footer-note" id="sch-url-status"></p>
+  </div>
+
+  <div class="bac-panel">
+    <p class="bac-eyebrow">またはファイルを直接選ぶ（.schem）</p>
     <label class="bac-drop" id="sch-drop">
       <input type="file" id="sch-file" accept=".schem">
       <div id="sch-drop-inner">
@@ -1282,32 +1305,55 @@
   }
 
   // ---- UI wiring ----
+  async function loadSchematicBuffer(buf, label, statusEl){
+    try {
+      var raw = await maybeGunzip(buf);
+      var nbtRoot = parseNbt(raw);
+      var schem = decodeSpongeSchematic(nbtRoot);
+      state.schem = schem;
+      state.currentLayer = 1;
+
+      var counts = computeCounts(schem);
+      renderStats(schem, counts);
+      renderList(counts);
+      renderLayerView();
+      $('sch-dl-cmd').disabled = false;
+      statusEl.textContent = '読み込み完了: '+label+'（'+schem.width+'×'+schem.height+'×'+schem.length+'）';
+    } catch(err){
+      console.error(err);
+      statusEl.textContent = '読み込みに失敗しました: ' + err.message;
+    }
+  }
+
   $('sch-file').addEventListener('change', function(e){
     var file = e.target.files[0];
     if(!file) return;
     $('sch-status').textContent = '読み込み中...';
     var reader = new FileReader();
-    reader.onload = async function(ev){
-      try {
-        var buf = ev.target.result;
-        var raw = await maybeGunzip(buf);
-        var nbtRoot = parseNbt(raw);
-        var schem = decodeSpongeSchematic(nbtRoot);
-        state.schem = schem;
-        state.currentLayer = 1;
-
-        var counts = computeCounts(schem);
-        renderStats(schem, counts);
-        renderList(counts);
-        renderLayerView();
-        $('sch-dl-cmd').disabled = false;
-        $('sch-status').textContent = '読み込み完了: '+file.name+'（'+schem.width+'×'+schem.height+'×'+schem.length+'）';
-      } catch(err){
-        console.error(err);
-        $('sch-status').textContent = '読み込みに失敗しました: ' + err.message;
-      }
+    reader.onload = function(ev){
+      loadSchematicBuffer(ev.target.result, file.name, $('sch-status'));
     };
     reader.readAsArrayBuffer(file);
+  });
+
+  $('sch-open-site').addEventListener('click', function(){
+    window.open('https://www.minecraft-schematics.com/', '_blank', 'noopener');
+  });
+
+  $('sch-load-url').addEventListener('click', async function(){
+    var url = $('sch-url').value.trim();
+    var statusEl = $('sch-url-status');
+    if(!url){ statusEl.textContent = 'URLを入力してください。'; return; }
+    statusEl.textContent = '取得中...';
+    try {
+      var res = await fetch(url);
+      if(!res.ok){ throw new Error('サーバーがエラーを返しました（HTTP '+res.status+'）。'); }
+      var buf = await res.arrayBuffer();
+      await loadSchematicBuffer(buf, url.split('/').pop() || url, statusEl);
+    } catch(err){
+      console.error(err);
+      statusEl.textContent = '取得に失敗しました。配布元サイトがブラウザからの直接アクセスを許可していない可能性があります（CORSエラー）。お手数ですが、ファイルを端末にダウンロードしてから下の「ファイルを選択」でお試しください。（詳細: ' + err.message + '）';
+    }
   });
 
   $('sch-layer-prev').addEventListener('click', function(){ state.currentLayer -= 1; renderLayerView(); });
