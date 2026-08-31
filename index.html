@@ -1222,6 +1222,9 @@
     JA_NAMES[key+'_pressure_plate'] = n+of_+'感圧板';
     JA_NAMES[key+'_button'] = n+of_+'ボタン';
     JA_NAMES[key+'_sign'] = n+of_+'看板';
+    JA_NAMES[key+'_wall_sign'] = n+of_+'壁掛け看板';
+    JA_NAMES[key+'_hanging_sign'] = n+of_+'つるし看板';
+    JA_NAMES[key+'_wall_hanging_sign'] = n+of_+'壁掛けのつるし看板';
   });
   Object.keys(COLOR_JA).forEach(function(key){
     var n = COLOR_JA[key];
@@ -1286,8 +1289,69 @@
     ['moss_block','コケブロック'],['moss_carpet','コケのカーペット'],
     ['bone_block','骨ブロック'],['honeycomb_block','ハニカムブロック'],['target','的（ターゲット）'],
     ['scaffolding','足場'],['slime_block','スライムブロック'],['honey_block','ハチミツブロック'],
-    ['air','空気'],['cave_air','空洞の空気'],['void_air','虚空の空気']
+    ['air','空気'],['cave_air','空洞の空気'],['void_air','虚空の空気'],
+    ['chain','鎖'],['anvil','金床'],['chipped_anvil','欠けた金床'],['damaged_anvil','壊れた金床'],
+    ['cartography_table','製図台'],['smithing_table','鍛冶台'],['enchanting_table','エンチャントテーブル'],
+    ['flower_pot','植木鉢'],['grindstone','グラインドストーン'],['stonecutter','石切台'],
+    ['composter','コンポスター'],['lectern','書見台'],['cauldron','大釜'],['beacon','ビーコン'],['brewing_stand','醸造台'],
+    ['jukebox','ジュークボックス'],['note_block','音符ブロック'],['tnt','TNT'],['spawner','スポナー'],
+    ['observer','オブザーバー'],['piston','ピストン'],['sticky_piston','粘着ピストン'],['dispenser','ディスペンサー'],['dropper','ドロッパー'],
+    ['loom','織り機'],['campfire','キャンプファイヤー'],['soul_campfire','ソウルキャンプファイヤー'],
+    ['short_grass','草'],['grass','草'],['fern','シダ'],['large_fern','大きなシダ'],['dead_bush','枯れ木'],
+    ['tall_grass','背の高い草'],['sugar_cane','サトウキビ'],['bamboo','竹'],['vine','ツタ'],
+    ['lily_pad','スイレンの葉'],['lily_of_the_valley','スズラン'],['rose_bush','バラの低木'],['peony','ボタン'],
+    ['sunflower','ヒマワリ'],['dandelion','タンポポ'],['poppy','ヒナゲシ'],['blue_orchid','ヒスイラン'],
+    ['allium','アリウム'],['azure_bluet','キキョウソウ'],['oxeye_daisy','フランスギク'],['cornflower','ヤグルマギク'],
+    ['wither_rose','ウィザーローズ'],['torchflower','トーチフラワー'],['pitcher_plant','ウツボカズラ'],
+    ['red_tulip','赤いチューリップ'],['orange_tulip','オレンジのチューリップ'],['white_tulip','白いチューリップ'],['pink_tulip','ピンクのチューリップ'],
+    ['azalea','アザレア'],['flowering_azalea','花咲くアザレア'],['azalea_leaves','アザレアの葉'],['flowering_azalea_leaves','花咲くアザレアの葉'],
+    ['cave_vines','洞窟のツタ'],['cave_vines_plant','洞窟のツタ'],['glow_lichen','発光する地衣類'],['spore_blossom','胞子の花'],
+    ['big_dripleaf','大きなポタルカ'],['small_dripleaf','小さなポタルカ'],['hanging_roots','垂れ根'],
+    ['sweet_berry_bush','スイートベリーの低木'],['red_mushroom','赤色のキノコ'],['brown_mushroom','茶色のキノコ'],
+    ['red_mushroom_block','赤色のキノコブロック'],['brown_mushroom_block','茶色のキノコブロック'],['mushroom_stem','キノコの柄'],
+    ['crimson_fungus','真紅のキノコ'],['warped_fungus','歪んだキノコ'],['crimson_roots','真紅の根'],['warped_roots','歪んだ根'],
+    ['weeping_vines','したたるツタ'],['twisting_vines','ねじれたツタ'],['nether_sprouts','ネザーの芽'],
+    ['sculk','スカルク'],['sculk_vein','スカルクヴェイン'],['sculk_catalyst','スカルクカタリスト'],['sculk_shrieker','スカルクシュリーカー'],
+    ['cobblestone_wall','丸石の壁'],['mossy_cobblestone_wall','苔むした丸石の壁'],
+    ['stone_brick_wall','石レンガの壁'],['mossy_stone_brick_wall','苔むした石レンガの壁'],
+    ['brick_wall','レンガの壁'],['mud_brick_wall','泥レンガの壁'],
+    ['sandstone_wall','砂岩の壁'],['red_sandstone_wall','赤い砂岩の壁'],
+    ['andesite_wall','安山岩の壁'],['diorite_wall','閃緑岩の壁'],['granite_wall','花崗岩の壁'],
+    ['deepslate_brick_wall','深層岩レンガの壁'],['deepslate_tile_wall','深層岩タイルの壁'],
+    ['cobbled_deepslate_wall','深層岩の丸石の壁'],['polished_deepslate_wall','磨かれた深層岩の壁'],
+    ['blackstone_wall','ブラックストーンの壁'],['polished_blackstone_wall','磨かれたブラックストーンの壁'],
+    ['polished_blackstone_brick_wall','磨かれたブラックストーンレンガの壁'],
+    ['nether_brick_wall','ネザーレンガの壁'],['red_nether_brick_wall','赤いネザーレンガの壁'],
+    ['end_stone_brick_wall','エンドストーンレンガの壁'],['prismarine_wall','プリズマリンの壁']
   ].forEach(function(pair){ JA_NAMES[pair[0]] = pair[1]; });
+
+  // 鉢植え（潜在的に植えられる主要な苗木・植物すべてに「〜の鉢植え」を自動生成）
+  ['dandelion','poppy','blue_orchid','allium','azure_bluet','red_tulip','orange_tulip','white_tulip','pink_tulip',
+   'oxeye_daisy','cornflower','lily_of_the_valley','wither_rose','torchflower','fern','dead_bush','cactus',
+   'bamboo','azalea_bush','flowering_azalea_bush','crimson_fungus','warped_fungus','red_mushroom','brown_mushroom',
+   'oak_sapling','spruce_sapling','birch_sapling','jungle_sapling','acacia_sapling','dark_oak_sapling',
+   'mangrove_propagule','cherry_sapling'
+  ].forEach(function(key){
+    var label = JA_NAMES[key] || key;
+    JA_NAMES['potted_'+key] = label+'の鉢植え';
+  });
+
+  // 銅ブロック系（酸化段階×ワックス有無×形状の組み合わせが多いため生成）
+  var COPPER_STAGE_JA = { '':'', 'exposed_':'露出した', 'weathered_':'風化した', 'oxidized_':'酸化した' };
+  var COPPER_FORM_JA = {
+    'copper_block':'銅ブロック', 'cut_copper':'切り込み入りの銅ブロック',
+    'cut_copper_stairs':'切り込み入りの銅の階段', 'cut_copper_slab':'切り込み入りの銅のハーフブロック',
+    'copper_door':'銅のドア', 'copper_trapdoor':'銅のトラップドア',
+    'copper_grate':'銅の格子', 'copper_bulb':'銅の電球', 'chiseled_copper':'模様入りの銅ブロック'
+  };
+  ['', 'waxed_'].forEach(function(waxPrefix){
+    var waxJa = waxPrefix ? 'ワックスを塗った' : '';
+    Object.keys(COPPER_STAGE_JA).forEach(function(stage){
+      Object.keys(COPPER_FORM_JA).forEach(function(form){
+        JA_NAMES[waxPrefix+stage+form] = waxJa+COPPER_STAGE_JA[stage]+COPPER_FORM_JA[form];
+      });
+    });
+  });
 
   function jaBlockName(fullName){
     var base = baseId(fullName);
