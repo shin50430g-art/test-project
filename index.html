@@ -257,6 +257,19 @@
   details.bac-preview-details summary::before{ content:'▸ '; }
   details.bac-preview-details[open] summary::before{ content:'▾ '; }
   details.bac-preview-details .bac-blueprint{ margin-top:10px; }
+
+  .bac-section-divider{ margin:32px 0 16px; padding-top:22px; border-top:3px dashed var(--border-light); }
+  .bac-section-title{
+    font-family:'Courier New',monospace; font-weight:900; letter-spacing:1.5px;
+    text-transform:uppercase; font-size:16px; color:var(--lime);
+    text-shadow:2px 2px 0 var(--border);
+    margin:0 0 6px;
+  }
+  .sch-layer-grid-wrap{
+    background:var(--border); border:3px solid var(--border-light);
+    padding:8px; overflow:auto; max-height:460px;
+  }
+  .sch-layer-grid{ display:grid; gap:2px; }
 </style>
 
 <div id="bac-root">
@@ -386,6 +399,83 @@
     </div>
     <p class="bac-footer-note" id="bac-cmd-status">まだ生成していません。</p>
     <button class="bac-btn" id="bac-dl-cmd" disabled>コマンドを生成して保存（.txt）</button>
+  </div>
+
+  <div class="bac-section-divider">
+    <p class="bac-section-title">🧱 スキマティック読み込みモード</p>
+    <p class="bac-sub" style="margin-bottom:14px;">ネット上で配布されている建築データ（WorldEditの .schem ファイル）を読み込み、実際に使われているブロックそのままで、段ごとの組み立てガイドとコマンドを作ります。画像モードと違い、ブロックは変換せず元データの通りに使います。</p>
+  </div>
+
+  <div class="bac-panel">
+    <p class="bac-eyebrow">スキマティックファイルを選ぶ（.schem）</p>
+    <label class="bac-drop" id="sch-drop">
+      <input type="file" id="sch-file" accept=".schem">
+      <div id="sch-drop-inner">
+        <div style="font-size:28px;">📦</div>
+        <div class="bac-drop-label">タップして .schem ファイルを選択</div>
+      </div>
+    </label>
+    <p class="bac-footer-note" id="sch-status">対応形式: WorldEditのSponge Schematic形式（.schem）。古い .schematic 形式や .litematic 形式には対応していません。</p>
+  </div>
+
+  <div class="bac-panel">
+    <p class="bac-eyebrow">始点座標（建築の角になる場所）</p>
+    <p class="bac-footer-note" style="margin-top:0;">この座標を、読み込んだデータの一番端（X=0, Y=0, Z=0）として扱います。ワールド内で実際に建てたい角の座標を入力してください。</p>
+    <div class="bac-row">
+      <div class="bac-label">X座標</div>
+      <input type="number" id="sch-x" value="0" class="bac-num-input">
+    </div>
+    <div class="bac-row">
+      <div class="bac-label">Y座標（高さ）</div>
+      <input type="number" id="sch-y" value="64" class="bac-num-input">
+    </div>
+    <div class="bac-row">
+      <div class="bac-label">Z座標</div>
+      <input type="number" id="sch-z" value="0" class="bac-num-input">
+    </div>
+  </div>
+
+  <div class="bac-panel">
+    <p class="bac-eyebrow">統計</p>
+    <div class="bac-stats">
+      <div class="bac-stat"><div class="n" id="sch-stat-w">–</div><div class="l">横(X)</div></div>
+      <div class="bac-stat"><div class="n" id="sch-stat-h">–</div><div class="l">高さ(Y・段数)</div></div>
+      <div class="bac-stat"><div class="n" id="sch-stat-l">–</div><div class="l">奥行き(Z)</div></div>
+      <div class="bac-stat"><div class="n" id="sch-stat-total">–</div><div class="l">合計ブロック数</div></div>
+      <div class="bac-stat"><div class="n" id="sch-stat-types">–</div><div class="l">ブロック種類</div></div>
+    </div>
+  </div>
+
+  <div class="bac-panel">
+    <p class="bac-eyebrow">必要なブロック一覧</p>
+    <div id="sch-list-wrap">
+      <div class="bac-empty">まだファイルを読み込んでいません</div>
+    </div>
+  </div>
+
+  <div class="bac-panel">
+    <p class="bac-eyebrow">組み立てモード</p>
+    <p class="bac-footer-note" style="margin-top:0;">「1段目」＝一番下の段です。1段ずつ表示するので、置き終わったら「次の段へ」をタップして進めてください。色は区別のための仮の色で、正確な見た目の色ではありません。ブロック名を頼りに設置してください。</p>
+    <div class="bac-layer-nav">
+      <button class="bac-btn secondary" id="sch-layer-prev" disabled>← 前の段</button>
+      <div class="bac-layer-indicator" id="sch-layer-indicator">–</div>
+      <button class="bac-btn secondary" id="sch-layer-next" disabled>次の段 →</button>
+    </div>
+    <div class="sch-layer-grid-wrap">
+      <div class="bac-empty" id="sch-layer-empty">ファイルを読み込むと、ここに1段ずつ組み立て用の配置が表示されます</div>
+      <div class="sch-layer-grid" id="sch-layer-grid" style="display:none;"></div>
+    </div>
+  </div>
+
+  <div class="bac-panel">
+    <p class="bac-eyebrow">コマンド生成</p>
+    <p class="bac-footer-note" style="margin-top:0;">上で入力した始点座標を基準に、絶対座標でコマンドを生成します。コマンドブロックに1行ずつ入力し、鎖状につなげて実行してください。</p>
+    <div class="bac-shape-toggle">
+      <button class="bac-shape-btn on" id="sch-cmd-fill" type="button">/fill 形式（コマンド数が少ない）</button>
+      <button class="bac-shape-btn" id="sch-cmd-setblock" type="button">/setblock 形式（1マスずつ）</button>
+    </div>
+    <p class="bac-footer-note" id="sch-cmd-status">まだ生成していません。</p>
+    <button class="bac-btn" id="sch-dl-cmd" disabled>コマンドを生成して保存（.txt）</button>
   </div>
 </div>
 
@@ -923,6 +1013,325 @@
     var blob = new Blob([lines.join('\n')], {type:'text/plain'});
     var link = document.createElement('a');
     link.download = 'block-art-commands.txt';
+    link.href = URL.createObjectURL(blob);
+    link.click();
+  });
+})();
+</script>
+
+<script>
+(function(){
+  // ---- スキマティック読み込みモード: WorldEditのSponge Schematic形式(.schem)を読み、実データのまま組み立てガイドを作る ----
+  var $ = function(id){ return document.getElementById(id); };
+
+  // ---- NBT (Named Binary Tag) パーサー ----
+  function NbtReader(buffer){ this.view = new DataView(buffer); this.offset = 0; }
+  NbtReader.prototype.readByte = function(){ var v=this.view.getInt8(this.offset); this.offset+=1; return v; };
+  NbtReader.prototype.readUByte = function(){ var v=this.view.getUint8(this.offset); this.offset+=1; return v; };
+  NbtReader.prototype.readShort = function(){ var v=this.view.getInt16(this.offset,false); this.offset+=2; return v; };
+  NbtReader.prototype.readUShort = function(){ var v=this.view.getUint16(this.offset,false); this.offset+=2; return v; };
+  NbtReader.prototype.readInt = function(){ var v=this.view.getInt32(this.offset,false); this.offset+=4; return v; };
+  NbtReader.prototype.readLong = function(){ var v=this.view.getBigInt64(this.offset,false); this.offset+=8; return v; };
+  NbtReader.prototype.readFloat = function(){ var v=this.view.getFloat32(this.offset,false); this.offset+=4; return v; };
+  NbtReader.prototype.readDouble = function(){ var v=this.view.getFloat64(this.offset,false); this.offset+=8; return v; };
+  NbtReader.prototype.readString = function(){
+    var len = this.readUShort();
+    var bytes = new Uint8Array(this.view.buffer, this.offset, len);
+    this.offset += len;
+    return new TextDecoder('utf-8').decode(bytes);
+  };
+  NbtReader.prototype.readByteArray = function(){
+    var len = this.readInt();
+    var arr = new Int8Array(this.view.buffer.slice(this.offset, this.offset+len));
+    this.offset += len;
+    return arr;
+  };
+  NbtReader.prototype.readIntArray = function(){
+    var len = this.readInt();
+    var arr = new Int32Array(len);
+    for(var i=0;i<len;i++){ arr[i]=this.readInt(); }
+    return arr;
+  };
+  NbtReader.prototype.readLongArray = function(){
+    var len = this.readInt();
+    var arr = [];
+    for(var i=0;i<len;i++){ arr.push(this.readLong()); }
+    return arr;
+  };
+  NbtReader.prototype.readList = function(){
+    var elemType = this.readUByte();
+    var count = this.readInt();
+    var arr = [];
+    for(var i=0;i<count;i++){ arr.push(this.readTagPayload(elemType)); }
+    return arr;
+  };
+  NbtReader.prototype.readCompound = function(){
+    var obj = {};
+    while(true){
+      var type = this.readUByte();
+      if(type===0) break;
+      var name = this.readString();
+      obj[name] = this.readTagPayload(type);
+    }
+    return obj;
+  };
+  NbtReader.prototype.readTagPayload = function(type){
+    switch(type){
+      case 0: return null;
+      case 1: return this.readByte();
+      case 2: return this.readShort();
+      case 3: return this.readInt();
+      case 4: return this.readLong();
+      case 5: return this.readFloat();
+      case 6: return this.readDouble();
+      case 7: return this.readByteArray();
+      case 8: return this.readString();
+      case 9: return this.readList();
+      case 10: return this.readCompound();
+      case 11: return this.readIntArray();
+      case 12: return this.readLongArray();
+      default: throw new Error('未対応のNBTタグ型です: '+type);
+    }
+  };
+  NbtReader.prototype.readNamedTag = function(){
+    var type = this.readUByte();
+    if(type===0) return {type:0, name:'', value:null};
+    var name = this.readString();
+    var value = this.readTagPayload(type);
+    return {type:type, name:name, value:value};
+  };
+  function parseNbt(buffer){
+    return new NbtReader(buffer).readNamedTag().value;
+  }
+
+  async function maybeGunzip(buffer){
+    var bytes = new Uint8Array(buffer);
+    if(bytes.length>2 && bytes[0]===0x1F && bytes[1]===0x8B){
+      if(typeof DecompressionStream === 'undefined'){
+        throw new Error('このブラウザはgzip展開に対応していません。最新のChrome/Safari/Firefoxでお試しください。');
+      }
+      var ds = new DecompressionStream('gzip');
+      var stream = new Blob([buffer]).stream().pipeThrough(ds);
+      return await new Response(stream).arrayBuffer();
+    }
+    return buffer;
+  }
+
+  function decodeVarints(byteArr, count){
+    var result = new Int32Array(count);
+    var pos = 0;
+    for(var i=0;i<count;i++){
+      var value = 0, shift = 0, b;
+      do {
+        b = byteArr[pos++] & 0xFF;
+        value |= (b & 0x7F) << shift;
+        shift += 7;
+      } while((b & 0x80) !== 0);
+      result[i] = value;
+    }
+    return result;
+  }
+
+  function decodeSpongeSchematic(nbtRoot){
+    var root = nbtRoot.Schematic || nbtRoot;
+    var width = root.Width, height = root.Height, length = root.Length;
+    var paletteObj = root.Palette;
+    var blockData = root.BlockData;
+
+    if(width==null || height==null || length==null || !paletteObj || !blockData){
+      throw new Error('Sponge Schematic形式(.schem)として認識できませんでした。');
+    }
+
+    var idToName = [];
+    Object.keys(paletteObj).forEach(function(name){ idToName[paletteObj[name]] = name; });
+
+    var total = width*height*length;
+    var indices = decodeVarints(blockData, total);
+
+    return { width:width, height:height, length:length, idToName:idToName, indices:indices };
+  }
+
+  function isAirName(name){
+    var base = name.split('[')[0];
+    return base==='minecraft:air' || base==='minecraft:cave_air' || base==='minecraft:void_air';
+  }
+  function schemShort(name){ return name.replace(/^minecraft:/,'').split('[')[0]; }
+  function hashColor(str){
+    var hash = 0;
+    for(var i=0;i<str.length;i++){ hash = (hash*31 + str.charCodeAt(i)) | 0; }
+    var hue = Math.abs(hash) % 360;
+    return 'hsl('+hue+',52%,40%)';
+  }
+  function blockAt(schem, x, y, z){
+    var idx = y*(schem.length*schem.width) + z*schem.width + x;
+    return schem.idToName[schem.indices[idx]] || 'minecraft:air';
+  }
+
+  var state = { schem:null, currentLayer:1 };
+  var cmdFormat = 'fill';
+
+  function computeCounts(schem){
+    var byName = {}, total = 0;
+    for(var i=0;i<schem.indices.length;i++){
+      var name = schem.idToName[schem.indices[i]] || 'minecraft:air';
+      if(isAirName(name)) continue;
+      byName[name] = (byName[name]||0)+1;
+      total++;
+    }
+    return {byName:byName, total:total};
+  }
+
+  function renderStats(schem, counts){
+    $('sch-stat-w').textContent = schem.width;
+    $('sch-stat-h').textContent = schem.height;
+    $('sch-stat-l').textContent = schem.length;
+    $('sch-stat-total').textContent = counts.total.toLocaleString();
+    $('sch-stat-types').textContent = Object.keys(counts.byName).length;
+  }
+
+  function renderList(counts){
+    var entries = Object.keys(counts.byName).map(function(name){
+      return {name:name, count:counts.byName[name]};
+    }).sort(function(a,b){ return b.count-a.count; });
+
+    var html = '<table class="bac-table"><thead><tr><th>ブロック</th><th style="text-align:right;">個数</th><th style="text-align:right;">割合</th></tr></thead><tbody>';
+    entries.forEach(function(e){
+      var pct = counts.total ? ((e.count/counts.total)*100).toFixed(1) : '0.0';
+      html += '<tr><td><span class="bac-swatch" style="background:'+hashColor(e.name)+'"></span>'+e.name+'</td>'
+            + '<td class="num">'+e.count.toLocaleString()+'</td>'
+            + '<td class="num">'+pct+'%</td></tr>';
+    });
+    html += '</tbody></table>';
+    $('sch-list-wrap').innerHTML = html;
+  }
+
+  function renderLayerView(){
+    var schem = state.schem;
+    var empty = $('sch-layer-empty'), grid = $('sch-layer-grid');
+    var prevBtn = $('sch-layer-prev'), nextBtn = $('sch-layer-next');
+    if(!schem){
+      empty.style.display='block'; grid.style.display='none';
+      prevBtn.disabled=true; nextBtn.disabled=true;
+      $('sch-layer-indicator').textContent = '–';
+      return;
+    }
+    var h = schem.height;
+    var dan = Math.max(1, Math.min(state.currentLayer, h));
+    state.currentLayer = dan;
+    var yBuild = dan-1;
+
+    empty.style.display='none';
+    grid.style.display='grid';
+    grid.style.gridTemplateColumns = 'repeat('+schem.width+', 66px)';
+    grid.style.gridTemplateRows = 'repeat('+schem.length+', 50px)';
+    grid.innerHTML = '';
+
+    for(var z=0; z<schem.length; z++){
+      for(var x=0; x<schem.width; x++){
+        var name = blockAt(schem, x, yBuild, z);
+        if(isAirName(name)) continue;
+        var cell = document.createElement('div');
+        cell.className = 'bac-layer-cell';
+        cell.style.gridColumn = (x+1);
+        cell.style.gridRow = (z+1);
+        cell.style.background = hashColor(name);
+        cell.style.color = '#f5f0e0';
+        cell.title = name;
+        var idx = document.createElement('span');
+        idx.className = 'idx';
+        idx.textContent = (x+1)+','+(z+1);
+        cell.appendChild(idx);
+        cell.appendChild(document.createTextNode(schemShort(name)));
+        grid.appendChild(cell);
+      }
+    }
+
+    var tag = dan===1 ? '(最下段)' : (dan===h ? '(最上段)' : '');
+    $('sch-layer-indicator').innerHTML = dan+' / '+h+' 段目<span class="tag">'+tag+'</span>';
+    prevBtn.disabled = dan<=1;
+    nextBtn.disabled = dan>=h;
+  }
+
+  function generateCommands(schem, startX, startY, startZ, format){
+    var w=schem.width, h=schem.height, l=schem.length;
+    var lines = [];
+    for(var y=0;y<h;y++){
+      for(var z=0;z<l;z++){
+        var x=0;
+        while(x<w){
+          var b = blockAt(schem,x,y,z);
+          if(isAirName(b)){ x++; continue; }
+          var x2=x;
+          while(x2+1<w){
+            var nb = blockAt(schem,x2+1,y,z);
+            if(nb!==b) break;
+            x2++;
+          }
+          var wx0=startX+x, wy=startY+y, wz=startZ+z, wx1=startX+x2;
+          var spec = b.indexOf(':')===-1 ? 'minecraft:'+b : b;
+          if(format==='fill'){
+            lines.push('fill '+wx0+' '+wy+' '+wz+' '+wx1+' '+wy+' '+wz+' '+spec);
+          } else {
+            for(var xx=x; xx<=x2; xx++){ lines.push('setblock '+(startX+xx)+' '+wy+' '+wz+' '+spec); }
+          }
+          x = x2+1;
+        }
+      }
+    }
+    return lines;
+  }
+
+  // ---- UI wiring ----
+  $('sch-file').addEventListener('change', function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    $('sch-status').textContent = '読み込み中...';
+    var reader = new FileReader();
+    reader.onload = async function(ev){
+      try {
+        var buf = ev.target.result;
+        var raw = await maybeGunzip(buf);
+        var nbtRoot = parseNbt(raw);
+        var schem = decodeSpongeSchematic(nbtRoot);
+        state.schem = schem;
+        state.currentLayer = 1;
+
+        var counts = computeCounts(schem);
+        renderStats(schem, counts);
+        renderList(counts);
+        renderLayerView();
+        $('sch-dl-cmd').disabled = false;
+        $('sch-status').textContent = '読み込み完了: '+file.name+'（'+schem.width+'×'+schem.height+'×'+schem.length+'）';
+      } catch(err){
+        console.error(err);
+        $('sch-status').textContent = '読み込みに失敗しました: ' + err.message;
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+
+  $('sch-layer-prev').addEventListener('click', function(){ state.currentLayer -= 1; renderLayerView(); });
+  $('sch-layer-next').addEventListener('click', function(){ state.currentLayer += 1; renderLayerView(); });
+
+  $('sch-cmd-fill').addEventListener('click', function(){
+    cmdFormat='fill';
+    this.classList.add('on'); $('sch-cmd-setblock').classList.remove('on');
+  });
+  $('sch-cmd-setblock').addEventListener('click', function(){
+    cmdFormat='setblock';
+    this.classList.add('on'); $('sch-cmd-fill').classList.remove('on');
+  });
+
+  $('sch-dl-cmd').addEventListener('click', function(){
+    if(!state.schem) return;
+    var startX = parseInt($('sch-x').value,10) || 0;
+    var startY = parseInt($('sch-y').value,10) || 0;
+    var startZ = parseInt($('sch-z').value,10) || 0;
+    var lines = generateCommands(state.schem, startX, startY, startZ, cmdFormat);
+    $('sch-cmd-status').textContent = lines.length.toLocaleString() + '件のコマンドを生成しました（'+(cmdFormat==='fill'?'/fill形式':'/setblock形式')+'）。座標は絶対座標です。';
+    var blob = new Blob([lines.join('\n')], {type:'text/plain'});
+    var link = document.createElement('a');
+    link.download = 'schematic-commands.txt';
     link.href = URL.createObjectURL(blob);
     link.click();
   });
