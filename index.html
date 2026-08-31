@@ -1187,7 +1187,112 @@
     var base = name.split('[')[0];
     return base==='minecraft:air' || base==='minecraft:cave_air' || base==='minecraft:void_air';
   }
-  function schemShort(name){ return name.replace(/^minecraft:/,'').split('[')[0]; }
+  function baseId(name){ return name.replace(/^minecraft:/,'').split('[')[0]; }
+
+  // ---- ブロックIDの日本語名辞書（表示専用。コマンドには影響しません） ----
+  var COLOR_JA = {
+    white:'白', orange:'オレンジ', magenta:'マゼンタ', light_blue:'水色', yellow:'黄',
+    lime:'黄緑', pink:'ピンク', gray:'灰', light_gray:'薄灰', cyan:'シアン',
+    purple:'紫', blue:'青', brown:'茶', green:'緑', red:'赤', black:'黒'
+  };
+  var WOOD_JA = {
+    oak:'オーク', spruce:'トウヒ', birch:'シラカバ', jungle:'ジャングル', acacia:'アカシア',
+    dark_oak:'ダークオーク', mangrove:'マングローブ', cherry:'サクラ',
+    crimson:'真紅の', warped:'歪んだ', bamboo:'竹'
+  };
+  var JA_NAMES = {};
+  Object.keys(WOOD_JA).forEach(function(key){
+    var n = WOOD_JA[key];
+    var of_ = (key==='crimson' || key==='warped') ? '' : 'の'; // 「真紅の」「歪んだ」は既にの/だで終わる
+    JA_NAMES[key+'_planks'] = n+of_+'板材';
+    JA_NAMES[key+'_log'] = n+of_+'原木';
+    JA_NAMES[key+'_wood'] = n+of_+'木';
+    JA_NAMES[key+'_stem'] = n+of_+'幹';
+    JA_NAMES['stripped_'+key+'_log'] = '皮を剥いだ'+n+of_+'原木';
+    JA_NAMES['stripped_'+key+'_wood'] = '皮を剥いだ'+n+of_+'木';
+    JA_NAMES['stripped_'+key+'_stem'] = '皮を剥いだ'+n+of_+'幹';
+    JA_NAMES[key+'_leaves'] = n+of_+'葉';
+    JA_NAMES[key+'_sapling'] = n+of_+'苗木';
+    JA_NAMES[key+'_stairs'] = n+of_+'階段';
+    JA_NAMES[key+'_slab'] = n+of_+'ハーフブロック';
+    JA_NAMES[key+'_fence'] = n+of_+'フェンス';
+    JA_NAMES[key+'_fence_gate'] = n+of_+'フェンスゲート';
+    JA_NAMES[key+'_door'] = n+of_+'ドア';
+    JA_NAMES[key+'_trapdoor'] = n+of_+'トラップドア';
+    JA_NAMES[key+'_pressure_plate'] = n+of_+'感圧板';
+    JA_NAMES[key+'_button'] = n+of_+'ボタン';
+    JA_NAMES[key+'_sign'] = n+of_+'看板';
+  });
+  Object.keys(COLOR_JA).forEach(function(key){
+    var n = COLOR_JA[key];
+    JA_NAMES[key+'_concrete'] = n+'のコンクリート';
+    JA_NAMES[key+'_concrete_powder'] = n+'のコンクリートパウダー';
+    JA_NAMES[key+'_wool'] = n+'色の羊毛';
+    JA_NAMES[key+'_terracotta'] = n+'色のテラコッタ';
+    JA_NAMES[key+'_glazed_terracotta'] = n+'の彩釉テラコッタ';
+    JA_NAMES[key+'_stained_glass'] = n+'の色付きガラス';
+    JA_NAMES[key+'_stained_glass_pane'] = n+'の色付き板ガラス';
+    JA_NAMES[key+'_carpet'] = n+'のカーペット';
+    JA_NAMES[key+'_bed'] = n+'のベッド';
+    JA_NAMES[key+'_banner'] = n+'の旗';
+    JA_NAMES[key+'_shulker_box'] = n+'のシュルカーボックス';
+    JA_NAMES[key+'_candle'] = n+'のロウソク';
+  });
+  [
+    ['stone','石'],['cobblestone','丸石'],['mossy_cobblestone','苔むした丸石'],
+    ['stone_bricks','石レンガ'],['mossy_stone_bricks','苔むした石レンガ'],
+    ['cracked_stone_bricks','ひび割れた石レンガ'],['chiseled_stone_bricks','模様入り石レンガ'],
+    ['smooth_stone','滑らかな石'],['stone_stairs','石の階段'],['stone_slab','石のハーフブロック'],
+    ['stone_brick_stairs','石レンガの階段'],['stone_brick_slab','石レンガのハーフブロック'],
+    ['stone_bricks_stairs','石レンガの階段'],['stone_bricks_slab','石レンガのハーフブロック'],
+    ['andesite','安山岩'],['polished_andesite','磨かれた安山岩'],
+    ['diorite','閃緑岩'],['polished_diorite','磨かれた閃緑岩'],
+    ['granite','花崗岩'],['polished_granite','磨かれた花崗岩'],
+    ['dirt','土'],['grass_block','草ブロック'],['podzol','ポドゾル'],['coarse_dirt','粗い土'],['mycelium','菌糸類'],
+    ['sand','砂'],['red_sand','赤い砂'],['gravel','砂利'],['clay','粘土ブロック'],
+    ['sandstone','砂岩'],['smooth_sandstone','滑らかな砂岩'],['chiseled_sandstone','模様入り砂岩'],['cut_sandstone','切り込み入り砂岩'],
+    ['red_sandstone','赤い砂岩'],['smooth_red_sandstone','滑らかな赤い砂岩'],
+    ['bricks','レンガ'],['brick_stairs','レンガの階段'],['brick_slab','レンガのハーフブロック'],
+    ['obsidian','黒曜石'],['crying_obsidian','泣く黒曜石'],
+    ['netherrack','ネザーラック'],['nether_bricks','ネザーレンガ'],['red_nether_bricks','赤いネザーレンガ'],
+    ['soul_sand','ソウルサンド'],['soul_soil','ソウルソイル'],['glowstone','グロウストーン'],
+    ['end_stone','エンドストーン'],['end_stone_bricks','エンドストーンレンガ'],
+    ['purpur_block','プルプァブロック'],['purpur_pillar','プルプァの柱'],['purpur_stairs','プルプァの階段'],
+    ['quartz_block','クォーツブロック'],['smooth_quartz','滑らかなクォーツブロック'],
+    ['quartz_pillar','クォーツの柱'],['chiseled_quartz_block','模様入りクォーツブロック'],['quartz_stairs','クォーツの階段'],
+    ['glass','ガラス'],['glass_pane','板ガラス'],['tinted_glass','着色ガラス'],
+    ['ice','氷'],['packed_ice','氷塊'],['blue_ice','青氷'],['snow_block','雪ブロック'],['snow','雪'],
+    ['water','水'],['lava','溶岩'],['bedrock','岩盤'],
+    ['iron_block','鉄ブロック'],['gold_block','金ブロック'],['diamond_block','ダイヤモンドブロック'],
+    ['emerald_block','エメラルドブロック'],['lapis_block','ラピスラズリブロック'],['coal_block','石炭ブロック'],
+    ['netherite_block','ネザライトブロック'],['raw_iron_block','鉄の原石ブロック'],['raw_gold_block','金の原石ブロック'],['raw_copper_block','銅の原石ブロック'],
+    ['redstone_block','レッドストーンブロック'],['copper_block','銅ブロック'],
+    ['exposed_copper','露出した銅ブロック'],['weathered_copper','風化した銅ブロック'],['oxidized_copper','酸化した銅ブロック'],
+    ['cut_copper','切り込み入りの銅ブロック'],['cut_copper_stairs','切り込み入りの銅の階段'],['cut_copper_slab','切り込み入りの銅のハーフブロック'],
+    ['deepslate','深層岩'],['cobbled_deepslate','深層岩の丸石'],
+    ['polished_deepslate','磨かれた深層岩'],['deepslate_bricks','深層岩レンガ'],['deepslate_tiles','深層岩タイル'],
+    ['tuff','凝灰岩'],['calcite','方解石'],['dripstone_block','鍾乳石ブロック'],['amethyst_block','アメジストブロック'],
+    ['basalt','玄武岩'],['polished_basalt','磨かれた玄武岩'],['smooth_basalt','滑らかな玄武岩'],
+    ['blackstone','ブラックストーン'],['polished_blackstone','磨かれたブラックストーン'],
+    ['polished_blackstone_bricks','磨かれたブラックストーンレンガ'],['gilded_blackstone','金の付いたブラックストーン'],
+    ['nether_wart_block','ネザーウォートブロック'],['warped_wart_block','歪んだウォートブロック'],['shroomlight','シュルームライト'],
+    ['crimson_nylium','真紅のナイリウム'],['warped_nylium','歪んだナイリウム'],
+    ['ladder','はしご'],['chest','チェスト'],['ender_chest','エンダーチェスト'],['crafting_table','作業台'],
+    ['furnace','かまど'],['blast_furnace','溶鉱炉'],['smoker','燻製器'],['bookshelf','本棚'],['barrel','樽'],
+    ['torch','松明'],['lantern','ランタン'],['sea_lantern','シーランタン'],['redstone_lamp','レッドストーンランプ'],
+    ['sea_pickle','ウミキノコ'],['kelp','コンブ'],
+    ['hay_block','干草の俵'],['melon','スイカ'],['pumpkin','カボチャ'],['carved_pumpkin','くり抜かれたカボチャ'],['jack_o_lantern','ジャック・オ・ランタン'],
+    ['mud','泥'],['packed_mud','固めた泥'],['mud_bricks','泥レンガ'],
+    ['moss_block','コケブロック'],['moss_carpet','コケのカーペット'],
+    ['bone_block','骨ブロック'],['honeycomb_block','ハニカムブロック'],['target','的（ターゲット）'],
+    ['scaffolding','足場'],['slime_block','スライムブロック'],['honey_block','ハチミツブロック'],
+    ['air','空気'],['cave_air','空洞の空気'],['void_air','虚空の空気']
+  ].forEach(function(pair){ JA_NAMES[pair[0]] = pair[1]; });
+
+  function jaBlockName(fullName){
+    var base = baseId(fullName);
+    return JA_NAMES[base] || base;
+  }
   function hashColor(str){
     var hash = 0;
     for(var i=0;i<str.length;i++){ hash = (hash*31 + str.charCodeAt(i)) | 0; }
@@ -1229,7 +1334,8 @@
     var html = '<table class="bac-table"><thead><tr><th>ブロック</th><th style="text-align:right;">個数</th><th style="text-align:right;">割合</th></tr></thead><tbody>';
     entries.forEach(function(e){
       var pct = counts.total ? ((e.count/counts.total)*100).toFixed(1) : '0.0';
-      html += '<tr><td><span class="bac-swatch" style="background:'+hashColor(e.name)+'"></span>'+e.name+'</td>'
+      html += '<tr><td><span class="bac-swatch" style="background:'+hashColor(e.name)+'"></span>'+jaBlockName(e.name)
+            + '<br><span style="font-size:9.5px;color:var(--text-dim);margin-left:24px;">'+baseId(e.name)+'</span></td>'
             + '<td class="num">'+e.count.toLocaleString()+'</td>'
             + '<td class="num">'+pct+'%</td></tr>';
     });
@@ -1273,7 +1379,7 @@
         idx.className = 'idx';
         idx.textContent = (x+1)+','+(z+1);
         cell.appendChild(idx);
-        cell.appendChild(document.createTextNode(schemShort(name)));
+        cell.appendChild(document.createTextNode(jaBlockName(name)));
         grid.appendChild(cell);
       }
     }
