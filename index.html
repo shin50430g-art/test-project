@@ -195,7 +195,6 @@
   }
   table.bac-table td{ padding:7px 4px; border-bottom:1px solid var(--border); }
   table.bac-table td.num{ text-align:right; font-family:'Courier New',monospace; color:var(--amber); font-weight:700; }
-  table.bac-table td.code{ font-family:'Courier New',monospace; color:var(--lime); font-weight:700; }
   .bac-swatch{ width:16px; height:16px; border:1px solid rgba(0,0,0,.5); display:inline-block; vertical-align:middle; margin-right:8px; }
 
   .bac-footer-note{ font-size:11px; color:var(--text-dim); line-height:1.6; margin-top:10px; }
@@ -212,9 +211,29 @@
   .bac-bp-row{ display:flex; align-items:center; white-space:nowrap; margin-bottom:2px; }
   .bac-bp-row .bp-label{
     font-family:'Courier New',monospace; font-size:10.5px; color:var(--amber);
-    width:66px; flex:none;
+    width:78px; flex:none;
   }
   .bac-bp-row .bp-codes{ font-family:'Courier New',monospace; font-size:10.5px; letter-spacing:1px; color:var(--text); }
+
+  .bac-shape-toggle{ display:flex; gap:8px; flex-wrap:wrap; }
+  .bac-shape-btn{
+    flex:1; min-width:140px;
+    font-family:'Courier New',monospace; font-size:11.5px; font-weight:700;
+    padding:10px 8px; text-align:center; cursor:pointer;
+    background:var(--panel-2); border:2px solid var(--border-light); color:var(--text-dim);
+  }
+  .bac-shape-btn.on{ background:var(--amber-dark); border-color:var(--border); color:#fff; }
+
+  .bac-pattern-cards{ display:flex; flex-direction:column; gap:12px; }
+  .bac-pattern-card{ border:2px solid var(--border-light); background:var(--panel-2); padding:10px; }
+  .bac-pattern-card.selected{ border-color:var(--lime); box-shadow:0 0 0 2px var(--lime) inset; }
+  .bac-pattern-card .title{ font-family:'Courier New',monospace; font-weight:800; color:var(--amber); font-size:12.5px; margin-bottom:6px; }
+  .bac-pattern-card .desc{ font-size:11px; color:var(--text-dim); line-height:1.5; margin-bottom:8px; }
+  .bac-pattern-faces{ display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap; margin-bottom:8px; }
+  .bac-pattern-face{ text-align:center; }
+  .bac-pattern-face canvas{ image-rendering:pixelated; display:block; border:1px solid rgba(0,0,0,.5); }
+  .bac-pattern-face .swatch{ width:56px; height:56px; border:1px solid rgba(0,0,0,.5); }
+  .bac-pattern-face span{ display:block; font-size:9.5px; color:var(--text-dim); margin-top:3px; }
 
   .bac-layer-nav{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
   .bac-layer-nav .bac-btn{ width:auto; flex:none; padding:10px 12px; font-size:11px; }
@@ -225,11 +244,11 @@
   .bac-layer-indicator .tag{ display:block; font-size:10px; color:var(--text-dim); font-weight:600; margin-top:2px; }
   .bac-layer-grid-wrap{
     background:var(--border); border:3px solid var(--border-light);
-    padding:8px; overflow-x:auto;
+    padding:8px; overflow:auto; max-height:440px;
   }
-  .bac-layer-grid{ display:inline-flex; gap:2px; }
+  .bac-layer-grid{ display:grid; gap:2px; }
   .bac-layer-cell{
-    flex:none; width:66px; min-height:50px; padding:4px 2px 3px;
+    width:66px; min-height:50px; padding:4px 2px 3px;
     display:flex; align-items:center; justify-content:center; text-align:center;
     font-size:10px; font-weight:700; line-height:1.15; word-break:break-word;
     border:1px solid rgba(0,0,0,.4); position:relative;
@@ -237,6 +256,10 @@
   .bac-layer-cell .idx{
     position:absolute; top:1px; left:3px; font-size:8px; font-weight:600; opacity:.6;
     font-family:'Courier New',monospace;
+  }
+  .bac-layer-roof{
+    display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+    gap:4px; padding:30px 14px; border:3px solid var(--border-light); font-size:13px; font-weight:700; line-height:1.6;
   }
   details.bac-preview-details{
     margin-top:14px; border:2px solid var(--border-light); background:var(--panel-2); padding:10px 12px;
@@ -252,7 +275,7 @@
 
 <div id="bac-root">
   <h1 class="bac-title">Pixel Forge</h1>
-  <p class="bac-sub">画像をアップロードすると、マインクラフトのブロックで再現するための必要ブロックと、土台（1段目）から最後の段までの設計図を自動で作成します。</p>
+  <p class="bac-sub">画像をアップロードすると、マインクラフトのブロックで再現するための必要ブロックと組み立て設計図を自動で作成します。平面（壁アート）だけでなく立体（建物ボックス）にも対応し、クリエイトモード用の設置コマンドも生成できます。</p>
 
   <div class="bac-panel">
     <p class="bac-eyebrow">Step 1 — 画像を選ぶ</p>
@@ -292,7 +315,26 @@
   </div>
 
   <div class="bac-panel">
-    <p class="bac-eyebrow">Step 3 — 画質・鮮明さ</p>
+    <p class="bac-eyebrow">Step 3 — 形を選ぶ</p>
+    <div class="bac-shape-toggle">
+      <button class="bac-shape-btn on" id="bac-shape-2d" type="button">平面（壁アート）</button>
+      <button class="bac-shape-btn" id="bac-shape-3d" type="button">立体（建物ボックス）</button>
+    </div>
+    <p class="bac-footer-note" style="margin-top:8px;">「立体」を選ぶと、アップロードした画像を正面として使い、見えない背面・側面・屋根を自動で仮組みします。写真そのものを復元するわけではなく、あくまで簡易的な推測です。</p>
+    <div class="bac-row" id="bac-depth-row" style="display:none; margin-top:12px;">
+      <div class="bac-label">奥行き（ブロック数）<span class="val" id="bac-depth-val">16</span></div>
+      <input type="range" id="bac-depth" min="2" max="48" value="16">
+    </div>
+  </div>
+
+  <div class="bac-panel" id="bac-pattern-panel" style="display:none;">
+    <p class="bac-eyebrow">立体パターンを選ぶ</p>
+    <p class="bac-footer-note" style="margin-top:0;">見えない部分の仕上げ方を3パターンから選んでください。あとから別のカードを選び直すこともできます。</p>
+    <div class="bac-pattern-cards" id="bac-pattern-cards"></div>
+  </div>
+
+  <div class="bac-panel">
+    <p class="bac-eyebrow">Step 4 — 画質・鮮明さ</p>
     <div class="bac-row">
       <div class="bac-label">明るさ<span class="val" id="bac-bright-val">0</span></div>
       <input type="range" id="bac-bright" min="-60" max="60" value="0">
@@ -316,7 +358,7 @@
   </div>
 
   <div class="bac-panel">
-    <p class="bac-eyebrow">プレビュー（完成イメージ）</p>
+    <p class="bac-eyebrow">プレビュー（正面イメージ）</p>
     <div class="bac-canvas-wrap">
       <div class="bac-empty" id="bac-empty-msg">画像を選択すると、ここにブロックアートのプレビューが表示されます</div>
       <canvas id="bac-canvas" style="display:none;"></canvas>
@@ -347,7 +389,8 @@
 
   <div class="bac-panel">
     <p class="bac-eyebrow">組み立てモード（実際の作業用）</p>
-    <p class="bac-footer-note" style="margin-top:0;">「1段目」＝土台となる一番下の段です。1段ずつ表示するので、置き終わったら「次の段へ」をタップして進めてください。各マスにブロック名を直接表示しているので、一覧表を見に行く必要はありません（左端が1マス目、右へ進みます）。</p>
+    <p class="bac-footer-note" style="margin-top:0;">「1段目」＝土台となる一番下の段です。1段ずつ表示するので、置き終わったら「次の段へ」をタップして進めてください。各マスにブロック名を直接表示しているので、一覧表を見に行く必要はありません。</p>
+    <p class="bac-footer-note" id="bac-layer-caption" style="display:none;">上の行が正面（手前）、下の行が背面（奥）です。左端の列が左側面、右端の列が右側面になります。</p>
     <div class="bac-layer-nav">
       <button class="bac-btn secondary" id="bac-layer-prev" disabled>← 前の段</button>
       <div class="bac-layer-indicator" id="bac-layer-indicator">–</div>
@@ -356,63 +399,75 @@
     <div class="bac-layer-grid-wrap">
       <div class="bac-empty" id="bac-layer-empty">画像を選択すると、ここに1段ずつ組み立て用の配置が表示されます</div>
       <div class="bac-layer-grid" id="bac-layer-grid" style="display:none;"></div>
+      <div class="bac-layer-roof" id="bac-layer-roof"></div>
     </div>
-    <p class="bac-footer-note">※ ブロックの色は代表的な平均色をもとにした目安です。壁一面（縦×横1層）の平面アートとして必要な個数・配置を計算しています。</p>
+    <p class="bac-footer-note">※ ブロックの色は代表的な平均色をもとにした目安です。</p>
 
     <details class="bac-preview-details">
       <summary>全段をまとめて見る（プレビュー・参考用）</summary>
-      <p class="bac-footer-note" style="margin-top:8px;">こちらは全体像を確認するための参考プレビューです。文字数が多く読みにくいため、実際の組み立ては上の「組み立てモード」をご利用ください。各マスの記号は下の「必要なブロック一覧」表の「記号」欄に対応しています。</p>
+      <p class="bac-footer-note" style="margin-top:8px;">こちらは全体像を確認するための参考プレビューです。立体の場合は正面・背面のみの簡易表示になります（側面は上の「組み立てモード」でご確認ください）。</p>
       <div class="bac-blueprint" id="bac-blueprint">
         <div class="bac-empty">まだデータがありません</div>
       </div>
     </details>
   </div>
+
+  <div class="bac-panel">
+    <p class="bac-eyebrow">Step 5 — クリエイトモード用コマンド生成</p>
+    <p class="bac-footer-note" style="margin-top:0;">生成したコマンドをコマンドブロックに1行ずつ入力し、鎖状（チェーン）につなげて実行すると、クリエイティブモードで一気に組み立てられます。実行したプレイヤーの位置を基準に、東方向（+X）・上方向（+Y）・南方向（+Z）へ配置されます。</p>
+    <div class="bac-shape-toggle">
+      <button class="bac-shape-btn on" id="bac-cmd-fill" type="button">/fill 形式（コマンド数が少ない）</button>
+      <button class="bac-shape-btn" id="bac-cmd-setblock" type="button">/setblock 形式（1マスずつ）</button>
+    </div>
+    <p class="bac-footer-note" id="bac-cmd-status">まだ生成していません。</p>
+    <button class="bac-btn" id="bac-dl-cmd" disabled>コマンドを生成して保存（.txt）</button>
+  </div>
 </div>
 
 <script>
 (function(){
-  // ---- Minecraft block palette (curated approximate average colors, maintained by Claude) ----
+  // ---- Minecraft block palette (curated approximate average colors + block IDs, maintained by Claude) ----
   var PALETTE = {
     concrete: [
-      ['白のコンクリート','#CFD5D6'],['オレンジのコンクリート','#E06101'],['マゼンタのコンクリート','#A9309F'],
-      ['水色のコンクリート','#2489C8'],['黄色のコンクリート','#F1AF15'],['黄緑のコンクリート','#5EA918'],
-      ['ピンクのコンクリート','#D5658F'],['灰色のコンクリート','#373A3E'],['薄灰色のコンクリート','#9C9D97'],
-      ['シアンのコンクリート','#157788'],['紫のコンクリート','#64209C'],['青のコンクリート','#2D2F8F'],
-      ['茶色のコンクリート','#603C20'],['緑のコンクリート','#495B24'],['赤のコンクリート','#8E2121'],
-      ['黒のコンクリート','#080A0F']
+      ['白のコンクリート','#CFD5D6','white_concrete'],['オレンジのコンクリート','#E06101','orange_concrete'],['マゼンタのコンクリート','#A9309F','magenta_concrete'],
+      ['水色のコンクリート','#2489C8','light_blue_concrete'],['黄色のコンクリート','#F1AF15','yellow_concrete'],['黄緑のコンクリート','#5EA918','lime_concrete'],
+      ['ピンクのコンクリート','#D5658F','pink_concrete'],['灰色のコンクリート','#373A3E','gray_concrete'],['薄灰色のコンクリート','#9C9D97','light_gray_concrete'],
+      ['シアンのコンクリート','#157788','cyan_concrete'],['紫のコンクリート','#64209C','purple_concrete'],['青のコンクリート','#2D2F8F','blue_concrete'],
+      ['茶色のコンクリート','#603C20','brown_concrete'],['緑のコンクリート','#495B24','green_concrete'],['赤のコンクリート','#8E2121','red_concrete'],
+      ['黒のコンクリート','#080A0F','black_concrete']
     ],
     wool: [
-      ['白色の羊毛','#E9ECEC'],['オレンジ色の羊毛','#F07613'],['マゼンタ色の羊毛','#BD44B3'],
-      ['空色の羊毛','#3AAFD9'],['黄色の羊毛','#F8C627'],['黄緑色の羊毛','#70B919'],
-      ['桃色の羊毛','#ED8DAC'],['灰色の羊毛','#3E4447'],['薄灰色の羊毛','#8E8E86'],
-      ['青緑色の羊毛','#159C9C'],['紫色の羊毛','#792AAC'],['青色の羊毛','#35399D'],
-      ['茶色の羊毛','#724728'],['緑色の羊毛','#546D1B'],['赤色の羊毛','#A02722'],
-      ['黒色の羊毛','#141519']
+      ['白色の羊毛','#E9ECEC','white_wool'],['オレンジ色の羊毛','#F07613','orange_wool'],['マゼンタ色の羊毛','#BD44B3','magenta_wool'],
+      ['空色の羊毛','#3AAFD9','light_blue_wool'],['黄色の羊毛','#F8C627','yellow_wool'],['黄緑色の羊毛','#70B919','lime_wool'],
+      ['桃色の羊毛','#ED8DAC','pink_wool'],['灰色の羊毛','#3E4447','gray_wool'],['薄灰色の羊毛','#8E8E86','light_gray_wool'],
+      ['青緑色の羊毛','#159C9C','cyan_wool'],['紫色の羊毛','#792AAC','purple_wool'],['青色の羊毛','#35399D','blue_wool'],
+      ['茶色の羊毛','#724728','brown_wool'],['緑色の羊毛','#546D1B','green_wool'],['赤色の羊毛','#A02722','red_wool'],
+      ['黒色の羊毛','#141519','black_wool']
     ],
     terracotta: [
-      ['白色のテラコッタ','#D1B1A1'],['オレンジ色のテラコッタ','#A05128'],['マゼンタ色のテラコッタ','#955C88'],
-      ['空色のテラコッタ','#6A7F8D'],['黄色のテラコッタ','#BA8523'],['黄緑色のテラコッタ','#667F33'],
-      ['桃色のテラコッタ','#A85055'],['灰色のテラコッタ','#392622'],['薄灰色のテラコッタ','#876B62'],
-      ['青緑色のテラコッタ','#575C5C'],['紫色のテラコッタ','#764656'],['青色のテラコッタ','#4A3C5B'],
-      ['茶色のテラコッタ','#4D3324'],['緑色のテラコッタ','#4C532A'],['赤色のテラコッタ','#8F3D2E'],
-      ['黒色のテラコッタ','#251610']
+      ['白色のテラコッタ','#D1B1A1','white_terracotta'],['オレンジ色のテラコッタ','#A05128','orange_terracotta'],['マゼンタ色のテラコッタ','#955C88','magenta_terracotta'],
+      ['空色のテラコッタ','#6A7F8D','light_blue_terracotta'],['黄色のテラコッタ','#BA8523','yellow_terracotta'],['黄緑色のテラコッタ','#667F33','lime_terracotta'],
+      ['桃色のテラコッタ','#A85055','pink_terracotta'],['灰色のテラコッタ','#392622','gray_terracotta'],['薄灰色のテラコッタ','#876B62','light_gray_terracotta'],
+      ['青緑色のテラコッタ','#575C5C','cyan_terracotta'],['紫色のテラコッタ','#764656','purple_terracotta'],['青色のテラコッタ','#4A3C5B','blue_terracotta'],
+      ['茶色のテラコッタ','#4D3324','brown_terracotta'],['緑色のテラコッタ','#4C532A','green_terracotta'],['赤色のテラコッタ','#8F3D2E','red_terracotta'],
+      ['黒色のテラコッタ','#251610','black_terracotta']
     ],
     natural: [
-      ['オークの板材','#B3874A'],['石','#7D7D7D'],['土','#8B5A3A'],['砂','#DBCF9C'],
-      ['砂利','#857A76'],['ネザーラック','#6E3634'],['黒曜石','#16131C'],['クォーツブロック','#E9E5DD'],
-      ['ダイヤモンドブロック','#63D6D2'],['金ブロック','#F9D94F'],['エメラルドブロック','#3AC259'],
-      ['ラピスラズリブロック','#2450A9'],['レッドストーンブロック','#A50E0E'],['雪ブロック','#F5F9FA'],
-      ['氷','#7C9FE3'],['エンドストーン','#DBDA9C']
+      ['オークの板材','#B3874A','oak_planks'],['石','#7D7D7D','stone'],['土','#8B5A3A','dirt'],['砂','#DBCF9C','sand'],
+      ['砂利','#857A76','gravel'],['ネザーラック','#6E3634','netherrack'],['黒曜石','#16131C','obsidian'],['クォーツブロック','#E9E5DD','quartz_block'],
+      ['ダイヤモンドブロック','#63D6D2','diamond_block'],['金ブロック','#F9D94F','gold_block'],['エメラルドブロック','#3AC259','emerald_block'],
+      ['ラピスラズリブロック','#2450A9','lapis_block'],['レッドストーンブロック','#A50E0E','redstone_block'],['雪ブロック','#F5F9FA','snow_block'],
+      ['氷','#7C9FE3','ice'],['エンドストーン','#DBDA9C','end_stone']
     ],
     special: [
-      ['銅ブロック','#C06A4C'],['露出した銅ブロック','#A97A63'],['風化した銅ブロック','#77946E'],['酸化した銅ブロック','#4F8F7C'],
-      ['チューブサンゴブロック','#3A5FCB'],['ブレインサンゴブロック','#D3488A'],['バブルサンゴブロック','#A02DAF'],
-      ['ファイアサンゴブロック','#A6273A'],['ホーンサンゴブロック','#D9C21B'],
-      ['深層岩','#43454A'],['凝灰岩','#6D6E62'],['深層岩の丸石','#4B4C50'],
-      ['アメジストブロック','#8C6FCE'],
-      ['真紅の板材','#8A3E56'],['歪んだ板材','#2B7A73'],
-      ['泥','#423E3B'],['パックドマッド','#7A5B3E'],
-      ['シーランタン','#C8DBD1'],['グロウストーン','#F7CD6B']
+      ['銅ブロック','#C06A4C','copper_block'],['露出した銅ブロック','#A97A63','exposed_copper'],['風化した銅ブロック','#77946E','weathered_copper'],['酸化した銅ブロック','#4F8F7C','oxidized_copper'],
+      ['チューブサンゴブロック','#3A5FCB','tube_coral_block'],['ブレインサンゴブロック','#D3488A','brain_coral_block'],['バブルサンゴブロック','#A02DAF','bubble_coral_block'],
+      ['ファイアサンゴブロック','#A6273A','fire_coral_block'],['ホーンサンゴブロック','#D9C21B','horn_coral_block'],
+      ['深層岩','#43454A','deepslate'],['凝灰岩','#6D6E62','tuff'],['深層岩の丸石','#4B4C50','cobbled_deepslate'],
+      ['アメジストブロック','#8C6FCE','amethyst_block'],
+      ['真紅の板材','#8A3E56','crimson_planks'],['歪んだ板材','#2B7A73','warped_planks'],
+      ['泥','#423E3B','mud'],['パックドマッド','#7A5B3E','packed_mud'],
+      ['シーランタン','#C8DBD1','sea_lantern'],['グロウストーン','#F7CD6B','glowstone']
     ]
   };
 
@@ -440,7 +495,7 @@
   var FULL_PALETTE = [];
   Object.keys(PALETTE).forEach(function(cat){
     PALETTE[cat].forEach(function(b){
-      FULL_PALETTE.push({name:b[0], short:shortBlockName(b[0]), hex:b[1], rgb:hexToRgb(b[1])});
+      FULL_PALETTE.push({name:b[0], short:shortBlockName(b[0]), hex:b[1], mcid:b[2], rgb:hexToRgb(b[1])});
     });
   });
 
@@ -476,7 +531,8 @@
     $('bac-diff-msg').textContent = tier.msg;
   }
 
-  var state = { img:null, lockAspect:true, dither:true, showGrid:false, currentLayer:1 };
+  var state = { img:null, lockAspect:true, dither:true, showGrid:false, currentLayer:1, shape:'2d', depth:16, pattern:null };
+  var cmdFormat = 'fill';
   var $ = function(id){ return document.getElementById(id); };
 
   $('bac-palette-count').textContent = FULL_PALETTE.length;
@@ -515,12 +571,186 @@
     buf[i+2] += eb*factor;
   }
 
-  function codeForIndex(n){
-    // 0 -> 01, 1 -> 02 ... base-36-ish zero padded, up to 99 then AA etc (safe margin)
-    if(n < 99) return (n+1<10?'0'+(n+1):String(n+1));
-    var letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    var idx = n-99;
-    return letters[Math.floor(idx/26)%26] + letters[idx%26];
+  // ---- 立体化：見えない面（背面・側面・屋根）の簡易推測パターン ----
+  function buildFacePatterns(front, w, h){
+    function rowAvgBlock(y){
+      var rs=0,gs=0,bs=0;
+      for(var x=0;x<w;x++){ var p=front[y*w+x].rgb; rs+=p[0]; gs+=p[1]; bs+=p[2]; }
+      return nearestBlock(rs/w, gs/w, bs/w);
+    }
+    function allAvgBlock(){
+      var rs=0,gs=0,bs=0,n=w*h;
+      for(var i=0;i<n;i++){ var p=front[i].rgb; rs+=p[0]; gs+=p[1]; bs+=p[2]; }
+      return nearestBlock(rs/n, gs/n, bs/n);
+    }
+    var rowAvg = [];
+    for(var y=0;y<h;y++) rowAvg.push(rowAvgBlock(y));
+    var overallAvg = allAvgBlock();
+    var topRowAvg = rowAvg[0];
+
+    return {
+      mirror: {
+        label:'シンメトリー版',
+        desc:'背面を正面の左右反転で再現します。左右の側面と屋根は正面の端の色でシンプルに仕上げます。',
+        back:function(y,x){ return front[y*w+(w-1-x)]; },
+        left:function(y,z){ return front[y*w+0]; },
+        right:function(y,z){ return front[y*w+(w-1)]; },
+        roof:function(x,z){ return topRowAvg; }
+      },
+      extend: {
+        label:'同色延長版',
+        desc:'各段の色をそのまま背面・側面に延長します。縦方向の色の変化は残りつつ、シンプルな仕上がりになります。',
+        back:function(y,x){ return rowAvg[y]; },
+        left:function(y,z){ return rowAvg[y]; },
+        right:function(y,z){ return rowAvg[y]; },
+        roof:function(x,z){ return overallAvg; }
+      },
+      flat: {
+        label:'シンプル単色版',
+        desc:'背面・側面・屋根をすべて画像全体の平均色1色でまとめた、もっとも作りやすいパターンです。',
+        back:function(y,x){ return overallAvg; },
+        left:function(y,z){ return overallAvg; },
+        right:function(y,z){ return overallAvg; },
+        roof:function(x,z){ return overallAvg; }
+      }
+    };
+  }
+
+  function renderMiniFace(getBlock, fw, fh, maxPx){
+    var sampleW = Math.min(fw, 64), sampleH = Math.min(fh, 64);
+    var cell = Math.max(1, Math.floor(maxPx/Math.max(sampleW,sampleH)));
+    var c = document.createElement('canvas');
+    c.width = sampleW*cell; c.height = sampleH*cell;
+    var ctx = c.getContext('2d');
+    for(var sy=0; sy<sampleH; sy++){
+      var yy = Math.floor(sy*fh/sampleH);
+      for(var sx=0; sx<sampleW; sx++){
+        var xx = Math.floor(sx*fw/sampleW);
+        ctx.fillStyle = getBlock(xx,yy).hex;
+        ctx.fillRect(sx*cell, sy*cell, cell, cell);
+      }
+    }
+    return c;
+  }
+
+  function renderPatternGallery(patterns, front, w, h){
+    var container = $('bac-pattern-cards');
+    container.innerHTML = '';
+    ['mirror','extend','flat'].forEach(function(key){
+      var preset = patterns[key];
+      var selected = state.pattern === key;
+      var card = document.createElement('div');
+      card.className = 'bac-pattern-card' + (selected ? ' selected' : '');
+
+      var title = document.createElement('div');
+      title.className = 'title';
+      title.textContent = preset.label + (selected ? '（選択中）' : '');
+      card.appendChild(title);
+
+      var desc = document.createElement('div');
+      desc.className = 'desc';
+      desc.textContent = preset.desc;
+      card.appendChild(desc);
+
+      var faces = document.createElement('div');
+      faces.className = 'bac-pattern-faces';
+
+      var frontFace = document.createElement('div');
+      frontFace.className = 'bac-pattern-face';
+      frontFace.appendChild(renderMiniFace(function(x,y){ return front[y*w+x]; }, w, h, 70));
+      var flabel = document.createElement('span'); flabel.textContent='正面'; frontFace.appendChild(flabel);
+      faces.appendChild(frontFace);
+
+      var backFace = document.createElement('div');
+      backFace.className = 'bac-pattern-face';
+      backFace.appendChild(renderMiniFace(function(x,y){ return preset.back(y,x); }, w, h, 70));
+      var blabel = document.createElement('span'); blabel.textContent='背面'; backFace.appendChild(blabel);
+      faces.appendChild(backFace);
+
+      var sideFace = document.createElement('div');
+      sideFace.className = 'bac-pattern-face';
+      var sw = document.createElement('div'); sw.className='swatch';
+      sw.style.background = preset.left(0,0).hex;
+      sideFace.appendChild(sw);
+      var slabel = document.createElement('span'); slabel.textContent='側面'; sideFace.appendChild(slabel);
+      faces.appendChild(sideFace);
+
+      var roofFace = document.createElement('div');
+      roofFace.className = 'bac-pattern-face';
+      var rw = document.createElement('div'); rw.className='swatch';
+      rw.style.background = preset.roof(0,0).hex;
+      roofFace.appendChild(rw);
+      var rlabel = document.createElement('span'); rlabel.textContent='屋根'; roofFace.appendChild(rlabel);
+      faces.appendChild(roofFace);
+
+      card.appendChild(faces);
+
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'bac-btn' + (selected ? ' secondary' : '');
+      btn.textContent = selected ? 'このパターンを使用中' : 'これに決める';
+      btn.addEventListener('click', function(){
+        state.pattern = key;
+        renderPatternGallery(patterns, front, w, h);
+        state.currentLayer = 1;
+        refreshModelViews();
+      });
+      card.appendChild(btn);
+
+      container.appendChild(card);
+    });
+  }
+
+  // ---- 統一モデル：平面(depth=1)でも立体でも同じ形で座標を引ける ----
+  function buildModel(){
+    var result = window.__bacResult, w = window.__bacW, h = window.__bacH;
+    if(!result) return null;
+
+    if(state.shape !== '3d'){
+      return {
+        w:w, depth:1, wallLayers:h, totalLayers:h,
+        get:function(x,yBuild,z){ return result[(h-1-yBuild)*w+x]; },
+        isRoof:function(yBuild){ return false; }
+      };
+    }
+
+    if(!state.pattern) return null;
+    var preset = window.__bacFacePatterns[state.pattern];
+    var depth = state.depth;
+
+    return {
+      w:w, depth:depth, wallLayers:h, totalLayers:h+1,
+      get:function(x,yBuild,z){
+        if(yBuild === h) return preset.roof(x,z);
+        var yImg = h-1-yBuild;
+        if(z === 0) return result[yImg*w+x];
+        if(depth>=2 && z === depth-1) return preset.back(yImg,x);
+        if(depth>=3 && x===0 && z>0 && z<depth-1) return preset.left(yImg,z);
+        if(depth>=3 && x===w-1 && z>0 && z<depth-1) return preset.right(yImg,z);
+        return null;
+      },
+      isRoof:function(yBuild){ return yBuild === h; }
+    };
+  }
+
+  function computeModelCounts(model){
+    var byName = {}, total = 0;
+    function add(block){ if(!block) return; byName[block.name] = (byName[block.name]||0)+1; total++; }
+    var w=model.w, depth=model.depth, wallLayers=model.wallLayers;
+    for(var yBuild=0; yBuild<wallLayers; yBuild++){
+      for(var x=0;x<w;x++) add(model.get(x,yBuild,0));
+      if(depth>=2){ for(var x2=0;x2<w;x2++) add(model.get(x2,yBuild,depth-1)); }
+      if(depth>=3){
+        for(var z=1; z<depth-1; z++){ add(model.get(0,yBuild,z)); add(model.get(w-1,yBuild,z)); }
+      }
+    }
+    if(model.isRoof(wallLayers)){
+      var roofBlock = model.get(0,wallLayers,0);
+      var n = w*depth;
+      byName[roofBlock.name] = (byName[roofBlock.name]||0)+n;
+      total += n;
+    }
+    return {byName:byName, total:total};
   }
 
   function process(){
@@ -552,7 +782,6 @@
     }
 
     var result = new Array(w*h);
-    var counts = {};
 
     for(var y=0;y<h;y++){
       for(var x=0;x<w;x++){
@@ -560,7 +789,6 @@
         var r = clamp(buf[i*3],0,255), g = clamp(buf[i*3+1],0,255), b = clamp(buf[i*3+2],0,255);
         var block = nearestBlock(r,g,b);
         result[i] = block;
-        counts[block.name] = (counts[block.name]||0) + 1;
 
         if(state.dither){
           var er = r - block.rgb[0], eg = g - block.rgb[1], eb = b - block.rgb[2];
@@ -572,70 +800,142 @@
       }
     }
 
-    // codes assigned by frequency (most-used block = 01)
-    var sortedNames = Object.keys(counts).sort(function(a,b){ return counts[b]-counts[a]; });
-    var codeMap = {};
-    sortedNames.forEach(function(name, i){ codeMap[name] = codeForIndex(i); });
-
     renderCanvas(result, w, h);
-    renderList(counts, w*h, codeMap);
-    renderBlueprint(result, w, h, codeMap);
-
     $('bac-stat-w').textContent = w;
     $('bac-stat-h').textContent = h;
-    $('bac-stat-total').textContent = (w*h).toLocaleString();
-    $('bac-stat-types').textContent = Object.keys(counts).length;
-    renderDifficulty(w*h);
     $('bac-dl-png').disabled = false;
-    $('bac-dl-list').disabled = false;
-    $('bac-dl-bp').disabled = false;
 
-    window.__bacCounts = counts;
-    window.__bacTotal = w*h;
-    window.__bacCodeMap = codeMap;
     window.__bacResult = result;
     window.__bacW = w; window.__bacH = h;
 
+    if(state.shape === '3d'){
+      var patterns = buildFacePatterns(result, w, h);
+      window.__bacFacePatterns = patterns;
+      $('bac-pattern-panel').style.display = 'block';
+      renderPatternGallery(patterns, result, w, h);
+    } else {
+      $('bac-pattern-panel').style.display = 'none';
+      window.__bacFacePatterns = null;
+    }
+
     state.currentLayer = 1;
+    refreshModelViews();
+  }
+
+  function refreshModelViews(){
+    var model = buildModel();
+    window.__bacModel = model;
+
+    if(!model){
+      $('bac-list-wrap').innerHTML = '<div class="bac-empty">' + (state.shape==='3d' ? '上のパターンを選ぶと表示されます' : 'まだデータがありません') + '</div>';
+      $('bac-blueprint').innerHTML = '<div class="bac-empty">まだデータがありません</div>';
+      $('bac-stat-total').textContent = '–';
+      $('bac-stat-types').textContent = '–';
+      $('bac-difficulty').style.display = 'none';
+      $('bac-dl-list').disabled = true;
+      $('bac-dl-bp').disabled = true;
+      $('bac-dl-cmd').disabled = true;
+      window.__bacCounts = null; window.__bacTotal = 0;
+      renderLayerView();
+      return;
+    }
+
+    var counts = computeModelCounts(model);
+    window.__bacCounts = counts.byName;
+    window.__bacTotal = counts.total;
+
+    renderList(counts.byName, counts.total);
+    renderBlueprintFromModel(model);
+    $('bac-stat-total').textContent = counts.total.toLocaleString();
+    $('bac-stat-types').textContent = Object.keys(counts.byName).length;
+    renderDifficulty(counts.total);
+    $('bac-dl-list').disabled = false;
+    $('bac-dl-bp').disabled = false;
+    $('bac-dl-cmd').disabled = false;
+
     renderLayerView();
   }
 
   function renderLayerView(){
-    var result = window.__bacResult, w = window.__bacW, h = window.__bacH;
-    var empty = $('bac-layer-empty'), grid = $('bac-layer-grid');
+    var model = window.__bacModel;
+    var empty = $('bac-layer-empty'), grid = $('bac-layer-grid'), roofBox = $('bac-layer-roof');
     var prevBtn = $('bac-layer-prev'), nextBtn = $('bac-layer-next');
-    if(!result){
+    var caption = $('bac-layer-caption');
+
+    if(!model){
       empty.style.display = 'block';
+      empty.textContent = (state.shape==='3d' && window.__bacResult) ? '上の「立体パターンを選ぶ」でパターンを選択してください' : '画像を選択すると、ここに1段ずつ組み立て用の配置が表示されます';
       grid.style.display = 'none';
+      roofBox.style.display = 'none';
+      caption.style.display = 'none';
       prevBtn.disabled = true; nextBtn.disabled = true;
       $('bac-layer-indicator').textContent = '–';
       return;
     }
-    var dan = clamp(state.currentLayer, 1, h);
+
+    var totalLayers = model.totalLayers;
+    var dan = clamp(state.currentLayer, 1, totalLayers);
     state.currentLayer = dan;
-    var y = h - dan;
+    var yBuild = dan-1;
 
     empty.style.display = 'none';
-    grid.style.display = 'inline-flex';
-    grid.innerHTML = '';
-    for(var x=0;x<w;x++){
-      var block = result[y*w+x];
-      var cell = document.createElement('div');
-      cell.className = 'bac-layer-cell';
-      cell.style.background = block.hex;
-      cell.style.color = textColorFor(block.hex);
-      var idx = document.createElement('span');
-      idx.className = 'idx';
-      idx.textContent = (x+1);
-      cell.appendChild(idx);
-      cell.appendChild(document.createTextNode(block.short));
-      grid.appendChild(cell);
+
+    if(model.isRoof(yBuild)){
+      grid.style.display = 'none';
+      caption.style.display = 'none';
+      var roofBlock = model.get(0,yBuild,0);
+      roofBox.style.display = 'flex';
+      roofBox.style.background = roofBlock.hex;
+      roofBox.style.color = textColorFor(roofBlock.hex);
+      roofBox.innerHTML = '屋根（最上部）を敷き詰めます<br><span style="font-size:16px;">'+roofBlock.short+'</span><br>'+(model.w*model.depth).toLocaleString()+'個（'+model.w+'×'+model.depth+' マス、全面同じブロック）';
+    } else {
+      roofBox.style.display = 'none';
+      caption.style.display = (model.depth>1) ? 'block' : 'none';
+      grid.style.display = 'grid';
+      grid.style.gridTemplateColumns = 'repeat('+model.w+', 66px)';
+      grid.style.gridTemplateRows = 'repeat('+model.depth+', 50px)';
+      grid.innerHTML = '';
+
+      function addCell(x,z,block,label){
+        var cell = document.createElement('div');
+        cell.className = 'bac-layer-cell';
+        cell.style.gridColumn = (x+1);
+        cell.style.gridRow = (z+1);
+        cell.style.background = block.hex;
+        cell.style.color = textColorFor(block.hex);
+        var idx = document.createElement('span');
+        idx.className = 'idx';
+        idx.textContent = label;
+        cell.appendChild(idx);
+        cell.appendChild(document.createTextNode(block.short));
+        grid.appendChild(cell);
+      }
+
+      var w = model.w, depth = model.depth;
+      for(var x=0;x<w;x++){
+        var bf = model.get(x,yBuild,0);
+        if(bf) addCell(x,0,bf,String(x+1));
+      }
+      if(depth>=2){
+        for(var x2=0;x2<w;x2++){
+          var bb = model.get(x2,yBuild,depth-1);
+          if(bb) addCell(x2,depth-1,bb,String(x2+1));
+        }
+      }
+      if(depth>=3){
+        for(var z=1; z<depth-1; z++){
+          var blf = model.get(0,yBuild,z);
+          if(blf) addCell(0,z,blf,String(z+1));
+          var brt = model.get(w-1,yBuild,z);
+          if(brt) addCell(w-1,z,brt,String(z+1));
+        }
+      }
     }
 
-    var tag = dan===1 ? '(土台)' : (dan===h ? '(最上段)' : '');
-    $('bac-layer-indicator').innerHTML = dan+' / '+h+' 段目<span class="tag">'+tag+'</span>';
+    var tag = (dan===1) ? '(土台)' : (model.isRoof(yBuild) ? '(屋根)' : (dan===model.wallLayers ? '(壁の最上段)' : ''));
+    $('bac-layer-indicator').innerHTML = dan+' / '+totalLayers+' 段目<span class="tag">'+tag+'</span>';
     prevBtn.disabled = dan<=1;
-    nextBtn.disabled = dan>=h;
+    nextBtn.disabled = dan>=totalLayers;
   }
 
   function renderCanvas(result, w, h){
@@ -646,7 +946,6 @@
     canvas.style.display='block';
     $('bac-empty-msg').style.display='none';
     var ctx = canvas.getContext('2d');
-    var gradCache = {};
     for(var y=0;y<h;y++){
       for(var x=0;x<w;x++){
         var hex = result[y*w+x].hex;
@@ -667,18 +966,18 @@
     }
   }
 
-  function renderList(counts, total, codeMap){
-    var entries = Object.keys(counts).map(function(name){
+  function renderList(byName, total){
+    var entries = Object.keys(byName).map(function(name){
       var hex = '#000';
       FULL_PALETTE.forEach(function(b){ if(b.name===name) hex=b.hex; });
-      return {name:name, count:counts[name], hex:hex, code:codeMap[name]};
+      return {name:name, count:byName[name], hex:hex};
     });
     entries.sort(function(a,b){ return b.count-a.count; });
 
-    var html = '<table class="bac-table"><thead><tr><th>記号</th><th>ブロック</th><th style="text-align:right;">個数</th><th style="text-align:right;">割合</th></tr></thead><tbody>';
+    var html = '<table class="bac-table"><thead><tr><th>ブロック</th><th style="text-align:right;">個数</th><th style="text-align:right;">割合</th></tr></thead><tbody>';
     entries.forEach(function(e){
-      var pct = ((e.count/total)*100).toFixed(1);
-      html += '<tr><td class="code">'+e.code+'</td><td><span class="bac-swatch" style="background:'+blockGradientCss(e.hex)+'"></span>'+e.name+'</td>'
+      var pct = total ? ((e.count/total)*100).toFixed(1) : '0.0';
+      html += '<tr><td><span class="bac-swatch" style="background:'+blockGradientCss(e.hex)+'"></span>'+e.name+'</td>'
             + '<td class="num">'+e.count.toLocaleString()+'</td>'
             + '<td class="num">'+pct+'%</td></tr>';
     });
@@ -686,28 +985,98 @@
     $('bac-list-wrap').innerHTML = html;
   }
 
-  function renderBlueprint(result, w, h, codeMap){
+  function renderBlueprintFromModel(model){
     var wrap = $('bac-blueprint');
     wrap.innerHTML = '';
-    // dan(段) 1 = 一番下の段。画像データは y=0 が上なので、下から順に読む。
-    for(var dan=1; dan<=h; dan++){
-      var y = h - dan;
+    var w = model.w, depth = model.depth, wallLayers = model.wallLayers, totalLayers = model.totalLayers;
+    for(var dan=1; dan<=totalLayers; dan++){
+      var yBuild = dan-1;
       var rowEl = document.createElement('div');
       rowEl.className = 'bac-bp-row';
       var label = document.createElement('div');
       label.className = 'bp-label';
-      label.textContent = dan+'段目' + (dan===1?'(土台)':(dan===h?'(最上)':''));
+      label.textContent = dan+'段目' + (dan===1?'(土台)':(model.isRoof(yBuild)?'(屋根)':(dan===wallLayers?'(壁最上)':'')));
       rowEl.appendChild(label);
       var codes = document.createElement('div');
       codes.className = 'bp-codes';
-      var parts = [];
-      for(var x=0;x<w;x++){
-        parts.push(codeMap[result[y*w+x].name]);
+      if(model.isRoof(yBuild)){
+        var roofBlock = model.get(0,yBuild,0);
+        codes.textContent = '屋根: '+roofBlock.short+' を '+(w*depth)+'マス全面';
+      } else {
+        var parts = [];
+        for(var x=0;x<w;x++){
+          var bf = model.get(x,yBuild,0);
+          parts.push(bf ? bf.short : '');
+        }
+        if(depth>=2){
+          parts.push('|背面|');
+          for(var x2=0;x2<w;x2++){
+            var bb = model.get(x2,yBuild,depth-1);
+            parts.push(bb ? bb.short : '');
+          }
+        }
+        codes.textContent = parts.join(' ');
       }
-      codes.textContent = parts.join(' ');
       rowEl.appendChild(codes);
       wrap.appendChild(rowEl);
     }
+  }
+
+  // ---- マイクラ設置コマンド生成 ----
+  function mcId(block){ return 'minecraft:' + block.mcid; }
+
+  function rleRun(getBlockFn, length){
+    var runs = [];
+    var i = 0;
+    while(i < length){
+      var b = getBlockFn(i);
+      if(!b){ i++; continue; }
+      var j = i;
+      while(j+1 < length){
+        var nb = getBlockFn(j+1);
+        if(!nb || nb.mcid !== b.mcid) break;
+        j++;
+      }
+      runs.push({start:i, end:j, block:b});
+      i = j+1;
+    }
+    return runs;
+  }
+
+  function generateCommands(model, format){
+    var w=model.w, depth=model.depth, wallLayers=model.wallLayers;
+    var lines = [];
+
+    function emit(x0,y0,z0,x1,y1,z1,block){
+      if(format==='fill'){
+        lines.push('fill ~'+x0+' ~'+y0+' ~'+z0+' ~'+x1+' ~'+y1+' ~'+z1+' '+mcId(block));
+      } else {
+        // 屋根のように x・z 両方向に広がる範囲もあるため、両軸をループする
+        for(var x=x0;x<=x1;x++){
+          for(var z=z0;z<=z1;z++){
+            lines.push('setblock ~'+x+' ~'+y0+' ~'+z+' '+mcId(block));
+          }
+        }
+      }
+    }
+
+    for(var yBuild=0; yBuild<wallLayers; yBuild++){
+      rleRun(function(x){ return model.get(x,yBuild,0); }, w).forEach(function(r){ emit(r.start,yBuild,0,r.end,yBuild,0,r.block); });
+      if(depth>=2){
+        rleRun(function(x){ return model.get(x,yBuild,depth-1); }, w).forEach(function(r){ emit(r.start,yBuild,depth-1,r.end,yBuild,depth-1,r.block); });
+      }
+      if(depth>=3){
+        rleRun(function(zi){ return model.get(0,yBuild,zi+1); }, depth-2).forEach(function(r){ emit(0,yBuild,r.start+1,0,yBuild,r.end+1,r.block); });
+        rleRun(function(zi){ return model.get(w-1,yBuild,zi+1); }, depth-2).forEach(function(r){ emit(w-1,yBuild,r.start+1,w-1,yBuild,r.end+1,r.block); });
+      }
+    }
+
+    if(model.isRoof(wallLayers)){
+      var roofBlock = model.get(0,wallLayers,0);
+      emit(0,wallLayers,0,w-1,wallLayers,depth-1,roofBlock);
+    }
+
+    return lines;
   }
 
   // ---- UI wiring ----
@@ -734,6 +1103,7 @@
         $('bac-h').value = Math.min(hv, parseInt($('bac-h').max,10));
         $('bac-h-num').value = hv;
         $('bac-h-val').textContent = hv;
+        state.pattern = null;
         process();
       };
       img.src = ev.target.result;
@@ -796,6 +1166,27 @@
     process();
   });
 
+  $('bac-shape-2d').addEventListener('click', function(){
+    if(state.shape==='2d') return;
+    state.shape = '2d';
+    this.classList.add('on'); $('bac-shape-3d').classList.remove('on');
+    $('bac-depth-row').style.display = 'none';
+    $('bac-pattern-panel').style.display = 'none';
+    process();
+  });
+  $('bac-shape-3d').addEventListener('click', function(){
+    if(state.shape==='3d') return;
+    state.shape = '3d';
+    this.classList.add('on'); $('bac-shape-2d').classList.remove('on');
+    $('bac-depth-row').style.display = 'block';
+    process();
+  });
+  $('bac-depth').addEventListener('input', function(){
+    state.depth = parseInt(this.value,10);
+    $('bac-depth-val').textContent = state.depth;
+    process();
+  });
+
   $('bac-layer-prev').addEventListener('click', function(){
     state.currentLayer -= 1;
     renderLayerView();
@@ -803,6 +1194,15 @@
   $('bac-layer-next').addEventListener('click', function(){
     state.currentLayer += 1;
     renderLayerView();
+  });
+
+  $('bac-cmd-fill').addEventListener('click', function(){
+    cmdFormat = 'fill';
+    this.classList.add('on'); $('bac-cmd-setblock').classList.remove('on');
+  });
+  $('bac-cmd-setblock').addEventListener('click', function(){
+    cmdFormat = 'setblock';
+    this.classList.add('on'); $('bac-cmd-fill').classList.remove('on');
   });
 
   $('bac-dl-png').addEventListener('click', function(){
@@ -816,10 +1216,10 @@
   $('bac-dl-list').addEventListener('click', function(){
     if(!window.__bacCounts) return;
     var entries = Object.keys(window.__bacCounts).map(function(name){
-      return {name:name, count:window.__bacCounts[name], code:window.__bacCodeMap[name]};
+      return {name:name, count:window.__bacCounts[name]};
     }).sort(function(a,b){ return b.count-a.count; });
     var lines = ['Pixel Forge ブロック一覧', '合計ブロック数: ' + window.__bacTotal, ''];
-    entries.forEach(function(e){ lines.push('['+e.code+'] ' + e.name + ' : ' + e.count + '個'); });
+    entries.forEach(function(e){ lines.push(e.name + ' : ' + e.count + '個'); });
     var blob = new Blob([lines.join('\n')], {type:'text/plain'});
     var link = document.createElement('a');
     link.download = 'block-list.txt';
@@ -828,10 +1228,10 @@
   });
 
   $('bac-dl-bp').addEventListener('click', function(){
-    if(!window.__bacResult) return;
-    var w = window.__bacW, h = window.__bacH;
-    var result = window.__bacResult;
-    var lines = ['Pixel Forge 設計図（1段目〜'+h+'段目）', '横'+w+'ブロック × 縦'+h+'段', ''];
+    var model = window.__bacModel;
+    if(!model) return;
+    var w=model.w, depth=model.depth, wallLayers=model.wallLayers, totalLayers=model.totalLayers;
+    var lines = ['Pixel Forge 設計図', state.shape==='3d' ? ('立体（横'+w+'×高さ'+wallLayers+'×奥行き'+depth+'）') : ('平面（横'+w+'×縦'+wallLayers+'）'), ''];
     lines.push('--- 使用ブロック一覧 ---');
     var entries = Object.keys(window.__bacCounts).map(function(name){
       return {name:name, count:window.__bacCounts[name]};
@@ -839,16 +1239,47 @@
     entries.forEach(function(e){ lines.push(e.name + ' : ' + e.count + '個'); });
     lines.push('');
     lines.push('--- 段ごとの配置（土台から積む／左端が1マス目、各マスはブロック名） ---');
-    for(var dan=1; dan<=h; dan++){
-      var y = h - dan;
-      var parts = [];
-      for(var x=0;x<w;x++){ parts.push(result[y*w+x].short); }
-      var tag = dan+'段目' + (dan===1?'（土台・一番下）':(dan===h?'（最上段）':''));
-      lines.push(tag + ': ' + parts.join(' / '));
+    for(var dan=1; dan<=totalLayers; dan++){
+      var yBuild = dan-1;
+      var tag = dan+'段目' + (dan===1?'（土台・一番下）':(model.isRoof(yBuild)?'（屋根）':(dan===wallLayers?'（壁の最上段）':'')));
+      if(model.isRoof(yBuild)){
+        var roofBlock = model.get(0,yBuild,0);
+        lines.push(tag+': '+roofBlock.name+' を '+(w*depth)+'マス全面に敷き詰め');
+        continue;
+      }
+      var frontParts = [];
+      for(var x=0;x<w;x++){ var bf=model.get(x,yBuild,0); frontParts.push(bf?bf.short:'-'); }
+      lines.push(tag+' [正面]: ' + frontParts.join(' / '));
+      if(depth>=2){
+        var backParts = [];
+        for(var x2=0;x2<w;x2++){ var bb=model.get(x2,yBuild,depth-1); backParts.push(bb?bb.short:'-'); }
+        lines.push('  [背面]: ' + backParts.join(' / '));
+      }
+      if(depth>=3){
+        var leftParts=[], rightParts=[];
+        for(var z=1; z<depth-1; z++){
+          var bl=model.get(0,yBuild,z); leftParts.push(bl?bl.short:'-');
+          var br=model.get(w-1,yBuild,z); rightParts.push(br?br.short:'-');
+        }
+        lines.push('  [左側面 手前→奥]: ' + leftParts.join(' / '));
+        lines.push('  [右側面 手前→奥]: ' + rightParts.join(' / '));
+      }
     }
     var blob = new Blob([lines.join('\n')], {type:'text/plain'});
     var link = document.createElement('a');
     link.download = 'block-blueprint.txt';
+    link.href = URL.createObjectURL(blob);
+    link.click();
+  });
+
+  $('bac-dl-cmd').addEventListener('click', function(){
+    var model = window.__bacModel;
+    if(!model) return;
+    var lines = generateCommands(model, cmdFormat);
+    $('bac-cmd-status').textContent = lines.length.toLocaleString() + '件のコマンドを生成しました（'+(cmdFormat==='fill'?'/fill形式':'/setblock形式')+'）。ダウンロードしたファイルの各行をコマンドブロックに1つずつ入力してください。';
+    var blob = new Blob([lines.join('\n')], {type:'text/plain'});
+    var link = document.createElement('a');
+    link.download = 'block-art-commands.txt';
     link.href = URL.createObjectURL(blob);
     link.click();
   });
