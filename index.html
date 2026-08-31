@@ -1158,8 +1158,17 @@
   function decodeSpongeSchematic(nbtRoot){
     var root = nbtRoot.Schematic || nbtRoot;
     var width = root.Width, height = root.Height, length = root.Length;
-    var paletteObj = root.Palette;
-    var blockData = root.BlockData;
+
+    // v1/v2はPalette・BlockDataがルート直下、v3(WorldEdit 7.3以降のデフォルト)は
+    // "Blocks"の中にPalette・Data(名前も変わる)としてネストされる
+    var paletteObj, blockData;
+    if(root.Palette && root.BlockData){
+      paletteObj = root.Palette;
+      blockData = root.BlockData;
+    } else if(root.Blocks && root.Blocks.Palette && root.Blocks.Data){
+      paletteObj = root.Blocks.Palette;
+      blockData = root.Blocks.Data;
+    }
 
     if(width==null || height==null || length==null || !paletteObj || !blockData){
       throw new Error('Sponge Schematic形式(.schem)として認識できませんでした。');
